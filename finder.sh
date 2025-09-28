@@ -45,81 +45,109 @@ mkdir -p "$TEMP_DIR"
 
 if [ -n "$DOMAIN" ]; then
     echo -e "${BLUE}[1/7]${NC} ${YELLOW}Running${NC} ${GREEN}subfinder${NC} for domain: ${CYAN}$DOMAIN${NC}..."
-    subfinder -d "$DOMAIN" -silent > "$TEMP_DIR/subfinder.txt" 2>/dev/null
+    echo "================================================================================================"
+    subfinder -d "$DOMAIN" | tee "$TEMP_DIR/subfinder.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} subfinder"
     echo ""
     
     echo -e "${BLUE}[2/7]${NC} ${YELLOW}Running${NC} ${GREEN}subdominator${NC} for domain: ${CYAN}$DOMAIN${NC}..."
-    subdominator -d "$DOMAIN" > "$TEMP_DIR/subdominator.txt" 2>/dev/null
+    echo "================================================================================================"
+    subdominator -d "$DOMAIN" | tee "$TEMP_DIR/subdominator.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} subdominator"
     echo ""
     
     echo -e "${BLUE}[3/7]${NC} ${YELLOW}Running${NC} ${GREEN}amass${NC} for domain: ${CYAN}$DOMAIN${NC}..."
-    amass enum -passive -d "$DOMAIN" > "$TEMP_DIR/amass.txt" 2>/dev/null
+    echo "================================================================================================"
+    amass enum -passive -d "$DOMAIN" | tee "$TEMP_DIR/amass.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} amass"
     echo ""
     
     echo -e "${BLUE}[4/7]${NC} ${YELLOW}Running${NC} ${GREEN}assetfinder${NC} for domain: ${CYAN}$DOMAIN${NC}..."
-    assetfinder --subs-only "$DOMAIN" > "$TEMP_DIR/assetfinder.txt" 2>/dev/null
+    echo "================================================================================================"
+    assetfinder --subs-only "$DOMAIN" | tee "$TEMP_DIR/assetfinder.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} assetfinder"
     echo ""
     
     echo -e "${BLUE}[5/7]${NC} ${YELLOW}Running${NC} ${GREEN}findomain${NC} for domain: ${CYAN}$DOMAIN${NC}..."
-    findomain -t "$DOMAIN" > "$TEMP_DIR/findomain.txt" 2>/dev/null
+    echo "================================================================================================"
+    findomain -t "$DOMAIN" | tee "$TEMP_DIR/findomain.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} findomain"
     echo ""
     
     echo -e "${BLUE}[6/7]${NC} ${YELLOW}Running${NC} ${GREEN}sublist3r${NC} for domain: ${CYAN}$DOMAIN${NC}..."
-    sublist3r -d "$DOMAIN" -o "$TEMP_DIR/sublist3r.txt" > /dev/null 2>&1
+    echo "================================================================================================"
+    sublist3r -d "$DOMAIN" | tee "$TEMP_DIR/sublist3r.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} sublist3r"
     echo ""
     
     echo -e "${BLUE}[7/7]${NC} ${YELLOW}Running${NC} ${GREEN}subscraper${NC} for domain: ${CYAN}$DOMAIN${NC}..."
-    python3 /root/subscraper/subscraper.py -d "$DOMAIN" > "$TEMP_DIR/subscraper.txt" 2>/dev/null
+    echo "================================================================================================"
+    python3 /root/subscraper/subscraper.py -d "$DOMAIN" | tee "$TEMP_DIR/subscraper.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} subscraper"
     echo ""
     
 elif [ -n "$DOMAIN_FILE" ]; then
     echo -e "${BLUE}[1/7]${NC} ${YELLOW}Running${NC} ${GREEN}subfinder${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
-    subfinder -dL "$DOMAIN_FILE" -silent > "$TEMP_DIR/subfinder.txt" 2>/dev/null
+    echo "================================================================================================"
+    subfinder -dL "$DOMAIN_FILE" | tee "$TEMP_DIR/subfinder.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} subfinder"
     echo ""
     
     echo -e "${BLUE}[2/7]${NC} ${YELLOW}Running${NC} ${GREEN}subdominator${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
-    subdominator -dL "$DOMAIN_FILE" > "$TEMP_DIR/subdominator.txt" 2>/dev/null
+    echo "================================================================================================"
+    subdominator -dL "$DOMAIN_FILE" | tee "$TEMP_DIR/subdominator.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} subdominator"
     echo ""
     
     echo -e "${BLUE}[3/7]${NC} ${YELLOW}Running${NC} ${GREEN}amass${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
+    echo "================================================================================================"
     while read -r domain; do
-        [ -n "$domain" ] && amass enum -passive -d "$domain" >> "$TEMP_DIR/amass.txt" 2>/dev/null
+        [ -n "$domain" ] && amass enum -passive -d "$domain" | tee -a "$TEMP_DIR/amass.txt"
     done < "$DOMAIN_FILE"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} amass"
     echo ""
     
     echo -e "${BLUE}[4/7]${NC} ${YELLOW}Running${NC} ${GREEN}assetfinder${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
+    echo "================================================================================================"
     while read -r domain; do
-        [ -n "$domain" ] && assetfinder --subs-only "$domain" >> "$TEMP_DIR/assetfinder.txt" 2>/dev/null
+        [ -n "$domain" ] && assetfinder --subs-only "$domain" | tee -a "$TEMP_DIR/assetfinder.txt"
     done < "$DOMAIN_FILE"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} assetfinder"
     echo ""
     
     echo -e "${BLUE}[5/7]${NC} ${YELLOW}Running${NC} ${GREEN}findomain${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
-    findomain -f "$DOMAIN_FILE" > "$TEMP_DIR/findomain.txt" 2>/dev/null
+    echo "================================================================================================"
+    findomain -f "$DOMAIN_FILE" | tee "$TEMP_DIR/findomain.txt"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} findomain"
     echo ""
     
     echo -e "${BLUE}[6/7]${NC} ${YELLOW}Running${NC} ${GREEN}sublist3r${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
+    echo "================================================================================================"
     while read -r domain; do
-        [ -n "$domain" ] && sublist3r -d "$domain" -o "$TEMP_DIR/sublist3r_$domain.txt" > /dev/null 2>&1
+        [ -n "$domain" ] && sublist3r -d "$domain" | tee -a "$TEMP_DIR/sublist3r.txt"
     done < "$DOMAIN_FILE"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} sublist3r"
     echo ""
     
     echo -e "${BLUE}[7/7]${NC} ${YELLOW}Running${NC} ${GREEN}subscraper${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
+    echo "================================================================================================"
     while read -r domain; do
-        [ -n "$domain" ] && python3 /root/subscraper/subscraper.py -d "$domain" >> "$TEMP_DIR/subscraper.txt" 2>/dev/null
+        [ -n "$domain" ] && python3 /root/subscraper/subscraper.py -d "$domain" | tee -a "$TEMP_DIR/subscraper.txt"
     done < "$DOMAIN_FILE"
+    echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} subscraper"
     echo ""
     
