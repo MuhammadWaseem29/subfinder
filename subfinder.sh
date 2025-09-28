@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Multi-tool subdomain enumeration script
 # Usage: ./subfinder.sh -d domain.com [-o output.txt]
 # Usage: ./subfinder.sh -dL domains.txt [-o output.txt]
 
@@ -95,7 +96,7 @@ else
 fi
 
 # Merge all results, remove duplicates and sort
-echo ""
+echo "" 
 echo -e "${PURPLE}Merging results and removing duplicates...${NC}"
 cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | sort -u > "$OUTPUT_FILE"
 
