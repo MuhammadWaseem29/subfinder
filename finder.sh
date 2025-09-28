@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Multi-tool subdomain enumeration script
-# Usage: ./subfinder.sh -d domain.com [-o output.txt]
-# Usage: ./subfinder.sh -dL domains.txt [-o output.txt]
+# Multi-tool subdomain enumeration script - FINDER
+# Usage: ./finder.sh -d domain.com [-o output.txt]
+# Usage: ./finder.sh -dL domains.txt [-o output.txt]
 
 # Colors
 RED='\033[0;31m'
