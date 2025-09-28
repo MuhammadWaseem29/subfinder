@@ -1,15 +1,23 @@
-# Subfinder - Subdomain Enumeration Tool
+# Subfinder - Multi-Tool Subdomain Enumeration Script
 
-A bash script for discovering subdomains using multiple techniques.
+A comprehensive bash script that automates subdomain discovery using multiple popular tools.
 
 ## Features
 
-- **DNS Enumeration**: Checks common subdomain names using DNS queries
-- **Certificate Transparency**: Queries crt.sh for subdomains found in SSL certificates
-- **Brute Force**: Tests subdomains from a comprehensive wordlist
-- **Multi-threading**: Runs all techniques in parallel for faster results
-- **Output Management**: Saves results in organized directories
-- **Domain Validation**: Validates domain format before processing
+- **Multiple Tools Integration**: Uses 6 different subdomain enumeration tools
+- **Single Domain Mode**: `-d domain.com` for scanning one domain
+- **Bulk Mode**: `-dL domains.txt` for scanning multiple domains from a file
+- **Output Consolidation**: All results saved to `all_subdomains.txt` with duplicates removed
+- **Easy Extension**: Simple structure to add more tools
+
+## Supported Tools
+
+1. **subfinder** - Fast subdomain discovery tool
+2. **subdominator** - Advanced subdomain enumeration 
+3. **amass** - In-depth DNS enumeration and network mapping
+4. **assetfinder** - Find domains and subdomains related to a given domain
+5. **findomain** - Cross-platform subdomain enumerator
+6. **sublist3r** - Python subdomain enumeration tool
 
 ## Usage
 
@@ -133,6 +141,40 @@ custom_enumeration "$domain" "$output_dir" &
 Results saved to: results/google.com/all_subdomains.txt
 ```
 
+### Multiple Domains from File
+```bash
+./subfinder.sh -dL domains.txt
+```
+
+## Output
+
+All results are automatically saved to `all_subdomains.txt` with duplicates removed and sorted.
+
+## Installation Requirements
+
+Make sure you have these tools installed:
+
+```bash
+# subfinder
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+
+# subdominator  
+pip install subdominator
+
+# amass
+go install -v github.com/owasp-amass/amass/v4/...@master
+
+# assetfinder
+go install github.com/tomnomnom/assetfinder@latest
+
+# findomain
+# Download from: https://github.com/Findomain/Findomain/releases
+
+# sublist3r
+git clone https://github.com/aboul3la/Sublist3r.git
+pip install -r Sublist3r/requirements.txt
+```
+
 ## Contributing
 
-Feel free to add more subdomain enumeration techniques to make this tool more comprehensive!
+Feel free to add more subdomain enumeration tools to make this script more comprehensive!
