@@ -16,6 +16,20 @@ NC='\033[0m' # No Color
 OUTPUT_FILE="subs.txt"
 TEMP_DIR="temp_subs_$$"
 
+# Cleanup function
+cleanup() {
+    echo ""
+    echo -e "${YELLOW}Cleaning up temporary files...${NC}"
+    rm -rf "$TEMP_DIR" 2>/dev/null
+    # Also clean up any orphaned temp directories
+    rm -rf temp_subs_* 2>/dev/null
+    echo -e "${GREEN}✓ Cleanup completed${NC}"
+    exit 1
+}
+
+# Set trap to cleanup on script interruption
+trap cleanup INT TERM
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -39,6 +53,9 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Clean up any existing orphaned temp directories
+rm -rf temp_subs_* 2>/dev/null
 
 # Create temp directory
 mkdir -p "$TEMP_DIR"
@@ -164,10 +181,12 @@ echo ""
 echo -e "${PURPLE}Merging results and removing duplicates...${NC}"
 cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | sort -u > "$OUTPUT_FILE"
 
-# Clean up temporary files
+# Clean up temporary files and any orphaned temp directories
 rm -rf "$TEMP_DIR"
+rm -rf temp_subs_* 2>/dev/null
 
 # Count results
 total_subs=$(wc -l < "$OUTPUT_FILE" 2>/dev/null || echo "0")
 echo -e "${GREEN}✓ Total unique subdomains found: ${YELLOW}$total_subs${NC}"
 echo -e "${GREEN}✓ All subdomains saved to: ${CYAN}$OUTPUT_FILE${NC}"
+echo -e "${GREEN}✓ Temporary files cleaned up${NC}"
