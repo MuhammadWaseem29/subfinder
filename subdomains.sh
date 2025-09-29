@@ -39,7 +39,6 @@ VERSION="2.0.0 Professional"
 AUTHOR="MuhammadWaseem29"
 OUTPUT_FILE="finder_results_$(date +%Y%m%d_%H%M%S).txt"
 TEMP_DIR="temp_finder_$$"
-REPORT_DIR="reports"
 
 # Auto-load Go PATH if not in current session
 if ! command -v go >/dev/null 2>&1; then
@@ -356,6 +355,11 @@ cleanup() {
     log_info "Cleaning up temporary files..."
     rm -rf "$TEMP_DIR" 2>/dev/null
     rm -rf temp_finder_* 2>/dev/null
+    rm -f sub_report.txt 2>/dev/null
+    rm -f *.json 2>/dev/null
+    rm -f amass_output_* 2>/dev/null
+    rm -f sublist3r_*.txt 2>/dev/null
+    rm -rf reports 2>/dev/null
     log_success "Cleanup completed"
     exit 1
 }
@@ -686,8 +690,7 @@ generate_report() {
     local report_name="$2"
     local total_subs="$3"
     
-    mkdir -p "$REPORT_DIR"
-    local report_file="$REPORT_DIR/${report_name}_$(date +%Y%m%d_%H%M%S).html"
+    local report_file="${report_name}_$(date +%Y%m%d_%H%M%S).html"
     
     cat > "$report_file" << EOF
 <!DOCTYPE html>
@@ -752,7 +755,7 @@ run_enumeration() {
     
     # Create directories
     rm -rf temp_finder_* 2>/dev/null
-    mkdir -p "$TEMP_DIR" "$REPORT_DIR"
+    mkdir -p "$TEMP_DIR"
     
     # Check tools before starting
     check_tools
@@ -786,16 +789,16 @@ run_enumeration() {
         case "$tool" in
             "subfinder")
                 if [ "$target_type" == "domain" ]; then
-                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target -silent${NC}"
                     echo ""
-                    timeout 300 $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
+                    timeout 300 $tool_path -d "$target" -silent 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
                         log_warning "Subfinder timed out or failed for $target"
                         touch "$TEMP_DIR/subfinder.txt"
                     }
                 else
-                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target${NC}"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target -silent${NC}"
                     echo ""
-                    timeout 600 $tool_path -dL "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
+                    timeout 600 $tool_path -dL "$target" -silent 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
                         log_warning "Subfinder timed out or failed for domain list"
                         touch "$TEMP_DIR/subfinder.txt"
                     }
@@ -803,13 +806,17 @@ run_enumeration() {
                 ;;
             "subdominator")
                 if [ "$target_type" == "domain" ]; then
-                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target -o /tmp/subdominator_temp.txt${NC}"
                     echo ""
-                    $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
+                    $tool_path -d "$target" -o /tmp/subdominator_temp.txt 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
+                    [ -f /tmp/subdominator_temp.txt ] && cat /tmp/subdominator_temp.txt >> "$TEMP_DIR/subdominator.txt" 2>/dev/null
+                    rm -f /tmp/subdominator_temp.txt 2>/dev/null
                 else
-                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target${NC}"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target -o /tmp/subdominator_temp.txt${NC}"
                     echo ""
-                    $tool_path -dL "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
+                    $tool_path -dL "$target" -o /tmp/subdominator_temp.txt 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
+                    [ -f /tmp/subdominator_temp.txt ] && cat /tmp/subdominator_temp.txt >> "$TEMP_DIR/subdominator.txt" 2>/dev/null
+                    rm -f /tmp/subdominator_temp.txt 2>/dev/null
                 fi
                 ;;
             "amass")
@@ -905,9 +912,14 @@ run_enumeration() {
     echo -e "${BRIGHT_BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | sort -u > "$OUTPUT_FILE"
     
-    # Cleanup
+    # Clean up all temporary files and any tool-generated files
     rm -rf "$TEMP_DIR"
     rm -rf temp_finder_* 2>/dev/null
+    rm -f sub_report.txt 2>/dev/null
+    rm -f *.json 2>/dev/null
+    rm -f amass_output_* 2>/dev/null
+    rm -f sublist3r_*.txt 2>/dev/null
+    rm -rf reports 2>/dev/null
     
     # Results
     local total_subs=$(wc -l < "$OUTPUT_FILE" 2>/dev/null || echo "0")
@@ -921,11 +933,6 @@ run_enumeration() {
     echo -e "${BRIGHT_GREEN}📁 Output File:${NC}            ${BRIGHT_CYAN}${UNDERLINE}$OUTPUT_FILE${NC}"
     echo -e "${BRIGHT_ORANGE}⏰ Execution Time:${NC}        ${WHITE}$(date)${NC}"
     echo -e "${BRIGHT_GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    
-    # Generate report if requested
-    if [ -n "$REPORT_NAME" ]; then
-        generate_report "$target" "$REPORT_NAME" "$total_subs"
-    fi
     
     log_success "FINDER enumeration completed! 🎯🚀✨"
     
