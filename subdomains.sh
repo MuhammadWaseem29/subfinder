@@ -422,20 +422,28 @@ install_tools() {
             log_error "Go installation failed"
         fi
     else
-        log_success "Go is already installed: $(go version)"
+        log_success "Go is already installed: $(go version) - Skipping installation"
     fi
     
     # Install ProjectDiscovery Tool Manager (pdtm)
-    log_info "Installing ProjectDiscovery Tool Manager (pdtm)..."
-    go install -v github.com/projectdiscovery/pdtm/cmd/pdtm@latest
-    
-    if command -v pdtm >/dev/null 2>&1; then
-        log_success "pdtm installed successfully"
-        log_info "Installing all ProjectDiscovery tools with pdtm..."
-        pdtm -ia
-        log_success "ProjectDiscovery tools installation completed"
+    log_info "Checking ProjectDiscovery Tool Manager (pdtm)..."
+    if ! command -v pdtm >/dev/null 2>&1; then
+        log_info "Installing pdtm..."
+        go install -v github.com/projectdiscovery/pdtm/cmd/pdtm@latest
+        
+        if command -v pdtm >/dev/null 2>&1; then
+            log_success "pdtm installed successfully"
+            log_info "Installing all ProjectDiscovery tools with pdtm..."
+            pdtm -ia
+            log_success "ProjectDiscovery tools installation completed"
+        else
+            log_warning "pdtm installation failed, continuing with manual tool installation"
+        fi
     else
-        log_warning "pdtm installation failed, continuing with manual tool installation"
+        log_success "pdtm is already installed - Skipping installation"
+        log_info "Updating ProjectDiscovery tools..."
+        pdtm -ua
+        log_success "ProjectDiscovery tools updated"
     fi
     
     # Install network tools
@@ -443,185 +451,220 @@ install_tools() {
     apt install -y net-tools
     
     # 2. Install Subfinder
-    log_info "Installing subfinder..."
-    go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-    
-    if command -v subfinder >/dev/null 2>&1; then
-        log_success "Subfinder installed successfully"
+    log_info "Checking subfinder installation..."
+    if ! command -v subfinder >/dev/null 2>&1; then
+        log_info "Installing subfinder..."
+        go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+        
+        if command -v subfinder >/dev/null 2>&1; then
+            log_success "Subfinder installed successfully"
+        else
+            log_error "Subfinder installation failed"
+        fi
     else
-        log_error "Subfinder installation failed"
+        log_success "Subfinder is already installed - Skipping installation"
     fi
     
     # 3. Install Subdominator (comprehensive installation)
-    log_info "Installing subdominator with multiple methods..."
-    
-    # Install pip and pipx first
-    apt install -y python3-pip pipx
-    
-    # Method 1: pipx
-    log_info "Trying pipx installation..."
-    if pipx install git+https://github.com/RevoltSecurities/Subdominator 2>/dev/null; then
-        log_success "Subdominator installed via pipx (git)"
-    elif pipx install subdominator --force 2>/dev/null; then
-        log_success "Subdominator installed via pipx (package)"
-    else
-        log_warning "Pipx failed, trying pip methods..."
+    log_info "Checking subdominator installation..."
+    if ! command -v subdominator >/dev/null 2>&1; then
+        log_info "Installing subdominator with multiple methods..."
         
-        # Method 2: pip with break-system-packages
-        pip install --upgrade subdominator --break-system-packages 2>/dev/null
-        pip install --upgrade git+https://github.com/RevoltSecurities/Subdominator --break-system-packages 2>/dev/null
+        # Install pip and pipx first
+        apt install -y python3-pip pipx
         
-        # Method 3: Manual installation if pip fails
-        if ! command -v subdominator >/dev/null 2>&1; then
-            log_info "Trying manual installation..."
-            git clone https://github.com/RevoltSecurities/Subdominator.git
-            cd Subdominator
-            pip install --upgrade pip --break-system-packages
-            pip install -r requirements.txt --break-system-packages
-            pip install . --break-system-packages
-            cd ..
+        # Method 1: pipx
+        log_info "Trying pipx installation..."
+        if pipx install git+https://github.com/RevoltSecurities/Subdominator 2>/dev/null; then
+            log_success "Subdominator installed via pipx (git)"
+        elif pipx install subdominator --force 2>/dev/null; then
+            log_success "Subdominator installed via pipx (package)"
+        else
+            log_warning "Pipx failed, trying pip methods..."
             
-            # Test installation
+            # Method 2: pip with break-system-packages
+            pip install --upgrade subdominator --break-system-packages 2>/dev/null
+            pip install --upgrade git+https://github.com/RevoltSecurities/Subdominator --break-system-packages 2>/dev/null
+            
+            # Method 3: Manual installation if pip fails
             if ! command -v subdominator >/dev/null 2>&1; then
-                log_warning "Finding subdominator binary..."
-                SUBDOMINATOR_PATH=$(which subdominator 2>/dev/null || find / -name subdominator 2>/dev/null | grep bin/ | head -1)
+                log_info "Trying manual installation..."
+                git clone https://github.com/RevoltSecurities/Subdominator.git
+                cd Subdominator
+                pip install --upgrade pip --break-system-packages
+                pip install -r requirements.txt --break-system-packages
+                pip install . --break-system-packages
+                cd ..
                 
-                if [ -n "$SUBDOMINATOR_PATH" ]; then
-                    echo "export PATH=\$PATH:$(dirname $SUBDOMINATOR_PATH)" >> ~/.bashrc
-                    echo "export PATH=\$PATH:$(dirname $SUBDOMINATOR_PATH)" >> ~/.zshrc
-                    export PATH=$PATH:$(dirname $SUBDOMINATOR_PATH)
-                    log_success "Subdominator path added to shell profiles"
+                # Test installation
+                if ! command -v subdominator >/dev/null 2>&1; then
+                    log_warning "Finding subdominator binary..."
+                    SUBDOMINATOR_PATH=$(which subdominator 2>/dev/null || find / -name subdominator 2>/dev/null | grep bin/ | head -1)
+                    
+                    if [ -n "$SUBDOMINATOR_PATH" ]; then
+                        echo "export PATH=\$PATH:$(dirname $SUBDOMINATOR_PATH)" >> ~/.bashrc
+                        echo "export PATH=\$PATH:$(dirname $SUBDOMINATOR_PATH)" >> ~/.zshrc
+                        export PATH=$PATH:$(dirname $SUBDOMINATOR_PATH)
+                        log_success "Subdominator path added to shell profiles"
+                    fi
                 fi
             fi
         fi
-    fi
-    
-    # Install dependencies for Subdominator
-    log_info "Installing Subdominator dependencies..."
-    apt update && apt install -y \
-        libpango-1.0-0 \
-        libcairo2 \
-        libpangoft2-1.0-0 \
-        libpangocairo-1.0-0 \
-        libgdk-pixbuf2.0-0 \
-        libffi-dev \
-        shared-mime-info
-    
-    apt install -y libpango1.0-dev libcairo2-dev
-    
-    # Verify subdominator
-    if command -v subdominator >/dev/null 2>&1; then
-        log_success "Subdominator installed and working"
+        
+        # Install dependencies for Subdominator
+        log_info "Installing Subdominator dependencies..."
+        apt update && apt install -y \
+            libpango-1.0-0 \
+            libcairo2 \
+            libpangoft2-1.0-0 \
+            libpangocairo-1.0-0 \
+            libgdk-pixbuf2.0-0 \
+            libffi-dev \
+            shared-mime-info
+        
+        apt install -y libpango1.0-dev libcairo2-dev
+        
+        # Verify subdominator
+        if command -v subdominator >/dev/null 2>&1; then
+            log_success "Subdominator installed and working"
+        else
+            log_warning "Subdominator may need manual PATH configuration"
+        fi
     else
-        log_warning "Subdominator may need manual PATH configuration"
+        log_success "Subdominator is already installed - Skipping installation"
     fi
     
     # 4. Install Amass
-    log_info "Installing amass..."
-    apt update && apt install -y snapd unzip curl
-    systemctl enable --now snapd.socket
-    snap install amass --classic
-    
-    if command -v amass >/dev/null 2>&1; then
-        log_success "Amass installed successfully"
+    log_info "Checking amass installation..."
+    if ! command -v amass >/dev/null 2>&1; then
+        log_info "Installing amass..."
+        apt update && apt install -y snapd unzip curl
+        systemctl enable --now snapd.socket
+        snap install amass --classic
+        
+        if command -v amass >/dev/null 2>&1; then
+            log_success "Amass installed successfully"
+        else
+            log_error "Amass installation failed"
+        fi
     else
-        log_error "Amass installation failed"
+        log_success "Amass is already installed - Skipping installation"
     fi
     
     # 5. Install Assetfinder
-    log_info "Installing assetfinder..."
-    go install github.com/tomnomnom/assetfinder@latest
-    
+    log_info "Checking assetfinder installation..."
     if ! command -v assetfinder >/dev/null 2>&1; then
-        log_warning "Assetfinder failed, trying with newer Go..."
-        rm -rf /usr/local/go
-        wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
-        tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
-        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.zshrc
-        source ~/.bashrc
-        export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
-        
-        log_info "Updated Go version: $(go version)"
+        log_info "Installing assetfinder..."
         go install github.com/tomnomnom/assetfinder@latest
-        rm go1.23.2.linux-amd64.tar.gz
-    fi
-    
-    if command -v assetfinder >/dev/null 2>&1; then
-        log_success "Assetfinder installed successfully"
+        
+        if ! command -v assetfinder >/dev/null 2>&1; then
+            log_warning "Assetfinder failed, trying with newer Go..."
+            rm -rf /usr/local/go
+            wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
+            tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.zshrc
+            source ~/.bashrc
+            export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+            
+            log_info "Updated Go version: $(go version)"
+            go install github.com/tomnomnom/assetfinder@latest
+            rm go1.23.2.linux-amd64.tar.gz
+        fi
+        
+        if command -v assetfinder >/dev/null 2>&1; then
+            log_success "Assetfinder installed successfully"
+        else
+            log_error "Assetfinder installation failed"
+        fi
     else
-        log_error "Assetfinder installation failed"
+        log_success "Assetfinder is already installed - Skipping installation"
     fi
     
     # 6. Install Findomain
-    log_info "Installing findomain..."
-    curl -LO https://github.com/findomain/findomain/releases/latest/download/findomain-linux-i386.zip
-    apt install -y unzip
-    unzip findomain-linux-i386.zip
-    chmod +x findomain
-    mv findomain /usr/local/bin/
-    rm findomain-linux-i386.zip
-    
-    if command -v findomain >/dev/null 2>&1; then
-        log_success "Findomain installed successfully"
+    log_info "Checking findomain installation..."
+    if ! command -v findomain >/dev/null 2>&1; then
+        log_info "Installing findomain..."
+        curl -LO https://github.com/findomain/findomain/releases/latest/download/findomain-linux-i386.zip
+        apt install -y unzip
+        unzip findomain-linux-i386.zip
+        chmod +x findomain
+        mv findomain /usr/local/bin/
+        rm findomain-linux-i386.zip
+        
+        if command -v findomain >/dev/null 2>&1; then
+            log_success "Findomain installed successfully"
+        else
+            log_error "Findomain installation failed"
+        fi
     else
-        log_error "Findomain installation failed"
+        log_success "Findomain is already installed - Skipping installation"
     fi
     
     # 7. Install Sublist3r
-    log_info "Installing sublist3r..."
-    git clone https://github.com/aboul3la/Sublist3r.git /opt/Sublist3r
-    cd /opt/Sublist3r
-    pip install -r requirements.txt --break-system-packages
-    
-    # Create wrapper script instead of symlink to ensure python3 usage
-    cat > /usr/local/bin/sublist3r << 'EOF'
+    log_info "Checking sublist3r installation..."
+    if ! command -v sublist3r >/dev/null 2>&1 && [ ! -f "/opt/Sublist3r/sublist3r.py" ]; then
+        log_info "Installing sublist3r..."
+        git clone https://github.com/aboul3la/Sublist3r.git /opt/Sublist3r
+        cd /opt/Sublist3r
+        pip install -r requirements.txt --break-system-packages
+        
+        # Create wrapper script instead of symlink to ensure python3 usage
+        cat > /usr/local/bin/sublist3r << 'EOF'
 #!/bin/bash
 python3 /opt/Sublist3r/sublist3r.py "$@"
 EOF
-    chmod +x /usr/local/bin/sublist3r
-    cd -
-    
-    if [ -f "/opt/Sublist3r/sublist3r.py" ]; then
-        log_success "Sublist3r installed successfully"
+        chmod +x /usr/local/bin/sublist3r
+        cd -
+        
+        if [ -f "/opt/Sublist3r/sublist3r.py" ]; then
+            log_success "Sublist3r installed successfully"
+        else
+            log_error "Sublist3r installation failed"
+        fi
     else
-        log_error "Sublist3r installation failed"
+        log_success "Sublist3r is already installed - Skipping installation"
     fi
     
     # 8. Install Subscraper
-    log_info "Installing subscraper..."
-    cd ~
-    git clone https://github.com/m8sec/subscraper /opt/subscraper
-    cd /opt/subscraper
-    
-    # Install all dependencies
-    pip3 install -r requirements.txt --break-system-packages
-    pip3 install ipparser --break-system-packages
-    pip3 install taser --break-system-packages
-    
-    # Install additional packages
-    apt update && apt install -y python3-poetry
-    pip3 install taser --break-system-packages --no-deps
-    pip3 install beautifulsoup4 bs4 lxml ntlm-auth requests-file requests-ntlm tldextract selenium selenium-wire webdriver-manager --break-system-packages
-    pip3 install bs4 --break-system-packages
-    pip3 install requests_ntlm --break-system-packages
-    pip3 install tldextract --break-system-packages
-    pip3 install selenium --break-system-packages --no-deps
-    pip3 install trio trio-websocket certifi typing_extensions pysocks --break-system-packages
-    
-    # Create wrapper script for subscraper
-    cat > /usr/local/bin/subscraper << 'EOF'
+    log_info "Checking subscraper installation..."
+    if [ ! -f "/opt/subscraper/subscraper.py" ]; then
+        log_info "Installing subscraper..."
+        cd ~
+        git clone https://github.com/m8sec/subscraper /opt/subscraper
+        cd /opt/subscraper
+        
+        # Install all dependencies
+        pip3 install -r requirements.txt --break-system-packages
+        pip3 install ipparser --break-system-packages
+        pip3 install taser --break-system-packages
+        
+        # Install additional packages
+        apt update && apt install -y python3-poetry
+        pip3 install taser --break-system-packages --no-deps
+        pip3 install beautifulsoup4 bs4 lxml ntlm-auth requests-file requests-ntlm tldextract selenium selenium-wire webdriver-manager --break-system-packages
+        pip3 install bs4 --break-system-packages
+        pip3 install requests_ntlm --break-system-packages
+        pip3 install tldextract --break-system-packages
+        pip3 install selenium --break-system-packages --no-deps
+        pip3 install trio trio-websocket certifi typing_extensions pysocks --break-system-packages
+        
+        # Create wrapper script for subscraper
+        cat > /usr/local/bin/subscraper << 'EOF'
 #!/bin/bash
 python3 /opt/subscraper/subscraper.py "$@"
 EOF
-    chmod +x /usr/local/bin/subscraper
-    
-    cd -
-    
-    if [ -f "/opt/subscraper/subscraper.py" ]; then
-        log_success "Subscraper installed successfully"
+        chmod +x /usr/local/bin/subscraper
+        
+        cd -
+        
+        if [ -f "/opt/subscraper/subscraper.py" ]; then
+            log_success "Subscraper installed successfully"
+        else
+            log_error "Subscraper installation failed"
+        fi
     else
-        log_error "Subscraper installation failed"
+        log_success "Subscraper is already installed - Skipping installation"
     fi
     
     # Final Go PATH setup for both shells
