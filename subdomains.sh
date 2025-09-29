@@ -788,14 +788,14 @@ run_enumeration() {
                 if [ "$target_type" == "domain" ]; then
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
                     echo ""
-                    timeout 300 $tool_path -d "$target" 2>&1 | tee "$TEMP_DIR/subfinder.txt" || {
+                    timeout 300 $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
                         log_warning "Subfinder timed out or failed for $target"
                         touch "$TEMP_DIR/subfinder.txt"
                     }
                 else
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target${NC}"
                     echo ""
-                    timeout 600 $tool_path -dL "$target" 2>&1 | tee "$TEMP_DIR/subfinder.txt" || {
+                    timeout 600 $tool_path -dL "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
                         log_warning "Subfinder timed out or failed for domain list"
                         touch "$TEMP_DIR/subfinder.txt"
                     }
@@ -805,25 +805,25 @@ run_enumeration() {
                 if [ "$target_type" == "domain" ]; then
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
                     echo ""
-                    $tool_path -d "$target" 2>&1 | tee "$TEMP_DIR/subdominator.txt"
+                    $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
                 else
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target${NC}"
                     echo ""
-                    $tool_path -dL "$target" 2>&1 | tee "$TEMP_DIR/subdominator.txt"
+                    $tool_path -dL "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
                 fi
                 ;;
             "amass")
                 if [ "$target_type" == "domain" ]; then
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path enum -passive -d $target${NC}"
                     echo ""
-                    $tool_path enum -passive -d "$target" 2>&1 | tee "$TEMP_DIR/amass.txt"
+                    $tool_path enum -passive -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/amass.txt" 2>/dev/null || true)
                 else
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path enum -passive (multiple domains)${NC}"
                     echo ""
                     while read -r domain; do
                         if [ -n "$domain" ]; then
                             echo -e "${YELLOW}Processing domain: $domain${NC}"
-                            $tool_path enum -passive -d "$domain" 2>&1 | tee -a "$TEMP_DIR/amass.txt"
+                            $tool_path enum -passive -d "$domain" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' >> "$TEMP_DIR/amass.txt" 2>/dev/null || true)
                         fi
                     done < "$target"
                 fi
@@ -832,14 +832,14 @@ run_enumeration() {
                 if [ "$target_type" == "domain" ]; then
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path --subs-only $target${NC}"
                     echo ""
-                    $tool_path --subs-only "$target" 2>&1 | tee "$TEMP_DIR/assetfinder.txt"
+                    $tool_path --subs-only "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/assetfinder.txt" 2>/dev/null || true)
                 else
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path --subs-only (multiple domains)${NC}"
                     echo ""
                     while read -r domain; do
                         if [ -n "$domain" ]; then
                             echo -e "${YELLOW}Processing domain: $domain${NC}"
-                            $tool_path --subs-only "$domain" 2>&1 | tee -a "$TEMP_DIR/assetfinder.txt"
+                            $tool_path --subs-only "$domain" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' >> "$TEMP_DIR/assetfinder.txt" 2>/dev/null || true)
                         fi
                     done < "$target"
                 fi
@@ -848,25 +848,25 @@ run_enumeration() {
                 if [ "$target_type" == "domain" ]; then
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -t $target${NC}"
                     echo ""
-                    $tool_path -t "$target" 2>&1 | tee "$TEMP_DIR/findomain.txt"
+                    $tool_path -t "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/findomain.txt" 2>/dev/null || true)
                 else
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -f $target${NC}"
                     echo ""
-                    $tool_path -f "$target" 2>&1 | tee "$TEMP_DIR/findomain.txt"
+                    $tool_path -f "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/findomain.txt" 2>/dev/null || true)
                 fi
                 ;;
             "sublist3r")
                 if [ "$target_type" == "domain" ]; then
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
                     echo ""
-                    $tool_path -d "$target" 2>&1 | tee "$TEMP_DIR/sublist3r.txt"
+                    $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/sublist3r.txt" 2>/dev/null || true)
                 else
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path (multiple domains)${NC}"
                     echo ""
                     while read -r domain; do
                         if [ -n "$domain" ]; then
                             echo -e "${YELLOW}Processing domain: $domain${NC}"
-                            $tool_path -d "$domain" 2>&1 | tee -a "$TEMP_DIR/sublist3r.txt"
+                            $tool_path -d "$domain" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' >> "$TEMP_DIR/sublist3r.txt" 2>/dev/null || true)
                         fi
                     done < "$target"
                 fi
@@ -875,14 +875,14 @@ run_enumeration() {
                 if [ "$target_type" == "domain" ]; then
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
                     echo ""
-                    $tool_path -d "$target" 2>&1 | tee "$TEMP_DIR/subscraper.txt"
+                    $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subscraper.txt" 2>/dev/null || true)
                 else
                     echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path (multiple domains)${NC}"
                     echo ""
                     while read -r domain; do
                         if [ -n "$domain" ]; then
                             echo -e "${YELLOW}Processing domain: $domain${NC}"
-                            $tool_path -d "$domain" 2>&1 | tee -a "$TEMP_DIR/subscraper.txt"
+                            $tool_path -d "$domain" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' >> "$TEMP_DIR/subscraper.txt" 2>/dev/null || true)
                         fi
                     done < "$target"
                 fi
