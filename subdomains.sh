@@ -40,6 +40,27 @@ OUTPUT_FILE="subdomains_$(date +%Y%m%d_%H%M%S).txt"
 TEMP_DIR="temp_subdomains_$$"
 REPORT_DIR="reports"
 
+# Auto-load Go PATH if not in current session
+if ! command -v go >/dev/null 2>&1; then
+    # Try to load Go from common locations
+    if [ -d "/usr/local/go/bin" ]; then
+        export PATH="$PATH:/usr/local/go/bin:$HOME/go/bin"
+    fi
+fi
+
+# Auto-load common binary paths
+export PATH="$PATH:$HOME/go/bin:/usr/local/bin:/snap/bin"
+
+# Load pipx paths if they exist
+if [ -d "$HOME/.local/bin" ]; then
+    export PATH="$PATH:$HOME/.local/bin"
+fi
+
+# Also check for root go path
+if [ -d "/root/go/bin" ]; then
+    export PATH="$PATH:/root/go/bin"
+fi
+
 # Color Definitions
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -85,11 +106,110 @@ log_progress() {
     echo -e "${PURPLE}[PROGRESS]${NC} $1"
 }
 
+# Debug Function
+debug_paths() {
+    show_banner
+    echo -e "${YELLOW}${BOLD}PATH DEBUG INFORMATION${NC}"
+    echo "════════════════════════════════════════════════════════════════════════════════"
+    echo -e "${BLUE}Current PATH:${NC} $PATH"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}GO BINARY LOCATIONS:${NC}"
+    echo -e "${WHITE}Go command:${NC} $(which go 2>/dev/null || echo -e '${RED}NOT FOUND${NC}')"
+    echo -e "${WHITE}Go version:${NC} $(go version 2>/dev/null || echo -e '${RED}NOT ACCESSIBLE${NC}')"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}SEARCHING FOR BINARIES:${NC}"
+    echo -e "${WHITE}Subfinder locations:${NC}"
+    find /root/go /home/*/go $HOME/go /usr/local -name "subfinder" 2>/dev/null || echo -e "${RED}No subfinder found${NC}"
+    echo ""
+    
+    echo -e "${WHITE}Assetfinder locations:${NC}"
+    find /root/go /home/*/go $HOME/go /usr/local -name "assetfinder" 2>/dev/null || echo -e "${RED}No assetfinder found${NC}"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}COMMAND DETECTION TEST:${NC}"
+    local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r")
+    for tool in "${tools[@]}"; do
+        local cmd_path=$(command -v $tool 2>/dev/null)
+        if [ -n "$cmd_path" ]; then
+            echo -e "${GREEN}✓${NC} $tool: $cmd_path"
+        else
+            echo -e "${RED}✗${NC} $tool: NOT FOUND"
+        fi
+    done
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}MANUAL PATH LOAD TEST:${NC}"
+    export PATH="$PATH:/usr/local/go/bin:$HOME/go/bin:/root/go/bin"
+    echo "After PATH update:"
+    echo -e "${WHITE}subfinder:${NC} $(command -v subfinder 2>/dev/null || echo -e '${RED}STILL NOT FOUND${NC}')"
+    echo -e "${WHITE}assetfinder:${NC} $(command -v assetfinder 2>/dev/null || echo -e '${RED}STILL NOT FOUND${NC}')"
+    echo ""
+    
+    echo -e "${CYAN}${BOLD}SUGGESTED FIXES:${NC}"
+    echo "1. Run: source ~/.bashrc"
+    echo "2. Run: export PATH=\$PATH:/usr/local/go/bin:\$HOME/go/bin"
+    echo "3. Restart terminal session"
+    echo "4. Re-run installation: sudo ./subdomains.sh --install"
+}
+
+# PATH Refresh Function
+refresh_paths() {
+    # Source bash profile if it exists
+    [ -f ~/.bashrc ] && source ~/.bashrc 2>/dev/null
+    [ -f ~/.profile ] && source ~/.profile 2>/dev/null
+    
+    # Add Go paths
+    export PATH="$PATH:/usr/local/go/bin:$HOME/go/bin:/root/go/bin"
+    
+    # Add common binary paths
+    export PATH="$PATH:/usr/local/bin:/snap/bin:$HOME/.local/bin"
+    
+    # Remove duplicates from PATH
+    export PATH=$(echo "$PATH" | tr ':' '\n' | awk '!seen[$0]++' | tr '\n' ':' | sed 's/:$//')
+}
 # Tool Detection Function
 detect_tool_path() {
     local tool="$1"
     
     case "$tool" in
+        "subfinder")
+            # Enhanced detection for subfinder
+            if command -v subfinder >/dev/null 2>&1; then
+                echo "subfinder"
+            elif [ -f "$HOME/go/bin/subfinder" ]; then
+                echo "$HOME/go/bin/subfinder"
+            elif [ -f "/root/go/bin/subfinder" ]; then
+                echo "/root/go/bin/subfinder"
+            else
+                # Search for subfinder binary
+                SUBFINDER_PATH=$(find /root/go /home/*/go $HOME/go -name "subfinder" 2>/dev/null | head -1)
+                if [ -n "$SUBFINDER_PATH" ]; then
+                    echo "$SUBFINDER_PATH"
+                else
+                    echo ""
+                fi
+            fi
+            ;;
+        "assetfinder")
+            # Enhanced detection for assetfinder
+            if command -v assetfinder >/dev/null 2>&1; then
+                echo "assetfinder"
+            elif [ -f "$HOME/go/bin/assetfinder" ]; then
+                echo "$HOME/go/bin/assetfinder"
+            elif [ -f "/root/go/bin/assetfinder" ]; then
+                echo "/root/go/bin/assetfinder"
+            else
+                # Search for assetfinder binary
+                ASSETFINDER_PATH=$(find /root/go /home/*/go $HOME/go -name "assetfinder" 2>/dev/null | head -1)
+                if [ -n "$ASSETFINDER_PATH" ]; then
+                    echo "$ASSETFINDER_PATH"
+                else
+                    echo ""
+                fi
+            fi
+            ;;
         "sublist3r")
             # Try multiple locations for sublist3r
             if command -v sublist3r >/dev/null 2>&1; then
@@ -126,15 +246,19 @@ detect_tool_path() {
                 fi
             fi
             ;;
-        "subdominator")
-            # Enhanced detection for subdominator
-            if command -v subdominator >/dev/null 2>&1; then
-                echo "subdominator"
+        "assetfinder")
+            # Enhanced detection for assetfinder
+            if command -v assetfinder >/dev/null 2>&1; then
+                echo "assetfinder"
+            elif [ -f "$HOME/go/bin/assetfinder" ]; then
+                echo "$HOME/go/bin/assetfinder"
+            elif [ -f "/root/go/bin/assetfinder" ]; then
+                echo "/root/go/bin/assetfinder"
             else
-                # Look for subdominator in common locations
-                SUBDOMINATOR_PATH=$(which subdominator 2>/dev/null || find / -name subdominator 2>/dev/null | grep bin/ | head -1)
-                if [ -n "$SUBDOMINATOR_PATH" ]; then
-                    echo "$SUBDOMINATOR_PATH"
+                # Search for assetfinder binary
+                ASSETFINDER_PATH=$(find /root/go /home/*/go $HOME/go -name "assetfinder" 2>/dev/null | head -1)
+                if [ -n "$ASSETFINDER_PATH" ]; then
+                    echo "$ASSETFINDER_PATH"
                 else
                     echo ""
                 fi
@@ -152,6 +276,9 @@ detect_tool_path() {
 
 # Tool Availability Check
 check_tools() {
+    # Refresh PATH variables before checking
+    refresh_paths
+    
     local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r" "subscraper")
     local available=0
     local total=${#tools[@]}
@@ -488,6 +615,7 @@ show_help() {
     echo "  -r  <report_name>        Generate detailed report"
     echo "  --install                Install all required tools"
     echo "  --check                  Check tool availability"
+    echo "  --debug                  Show PATH and binary location debug info"
     echo "  --update                 Update all tools to latest versions"
     echo "  --version                Show version information"
     echo "  --help                   Show this help message"
@@ -498,6 +626,7 @@ show_help() {
     echo "  $0 -dL domains.txt -r security_audit     # Multiple domains with report"
     echo "  $0 --install                             # Install all tools"
     echo "  $0 --check                               # Check tool status"
+    echo "  $0 --debug                               # Debug PATH issues"
     echo ""
     echo -e "${YELLOW}${BOLD}SUPPORTED TOOLS:${NC}"
     echo "  • subfinder    - Fast passive subdomain discovery"
@@ -577,6 +706,9 @@ run_enumeration() {
     local target_type="$2"  # "domain" or "file"
     
     show_banner
+    
+    # Refresh PATH variables for this session
+    refresh_paths
     
     # Create directories
     rm -rf temp_subdomains_* 2>/dev/null
@@ -747,6 +879,10 @@ main() {
                 show_banner
                 check_tools
                 exit $?
+                ;;
+            --debug)
+                debug_paths
+                exit 0
                 ;;
             --version)
                 show_banner
