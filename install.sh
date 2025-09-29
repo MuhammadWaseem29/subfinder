@@ -58,9 +58,11 @@ if command_exists go; then
 else
     print_status "Installing Go..."
     if wget -q https://go.dev/dl/go1.22.3.linux-amd64.tar.gz; then
-        sudo rm -rf /usr/local/go
-        sudo tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
+        rm -rf /usr/local/go
+        tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
         echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc
+        echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.zshrc 2>/dev/null || true
+        source ~/.bashrc
         export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
         rm go1.22.3.linux-amd64.tar.gz
         
@@ -225,13 +227,16 @@ else
     rm -rf /usr/local/go
     wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
     tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
-    echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc && source ~/.bashrc
+    echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+    echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.zshrc 2>/dev/null || true
+    source ~/.bashrc
     
     # Update current session
     export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
     
     print_status "Go version: $(go version)"
     go install github.com/tomnomnom/assetfinder@latest
+    rm go1.23.2.linux-amd64.tar.gz
     
     if command_exists assetfinder; then
         print_success "Assetfinder installed successfully with newer Go"
@@ -243,8 +248,8 @@ fi
 # 8. Install Subscraper
 print_status "Installing Subscraper..."
 cd ~
-git clone https://github.com/m8sec/subscraper
-cd subscraper
+git clone https://github.com/m8sec/subscraper /opt/subscraper
+cd /opt/subscraper
 
 # Install dependencies
 pip3 install -r requirements.txt --break-system-packages
@@ -263,7 +268,7 @@ pip3 install trio trio-websocket certifi typing_extensions pysocks --break-syste
 
 # Test subscraper
 if [ -f "subscraper.py" ]; then
-    print_success "Subscraper installed successfully in ~/subscraper/"
+    print_success "Subscraper installed successfully in /opt/subscraper/"
 else
     print_error "Subscraper installation failed"
 fi
@@ -297,7 +302,7 @@ else
 fi
 
 # Check subscraper
-if [ -f "subscraper/subscraper.py" ]; then
+if [ -f "/opt/subscraper/subscraper.py" ]; then
     echo -e "${GREEN}✓${NC} subscraper - ${GREEN}Installed${NC}"
 else
     echo -e "${RED}✗${NC} subscraper - ${RED}Failed${NC}"
@@ -306,6 +311,7 @@ fi
 echo ""
 print_success "Installation script completed!"
 print_status "Please restart your terminal or run: source ~/.bashrc"
+print_status "For zsh users, also run: source ~/.zshrc"
 print_status "Then test your FINDER tool: ./finder.sh -d example.com"
 
 echo ""

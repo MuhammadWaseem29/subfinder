@@ -94,10 +94,10 @@ detect_tool_path() {
             # Try multiple locations for sublist3r
             if command -v sublist3r >/dev/null 2>&1; then
                 echo "sublist3r"
-            elif [ -f "Sublist3r/sublist3r.py" ]; then
-                echo "python3 Sublist3r/sublist3r.py"
             elif [ -f "/opt/Sublist3r/sublist3r.py" ]; then
                 echo "python3 /opt/Sublist3r/sublist3r.py"
+            elif [ -f "Sublist3r/sublist3r.py" ]; then
+                echo "python3 Sublist3r/sublist3r.py"
             else
                 SUBLIST3R_PATH=$(find / -name "sublist3r.py" 2>/dev/null | head -1)
                 if [ -n "$SUBLIST3R_PATH" ]; then
@@ -109,7 +109,9 @@ detect_tool_path() {
             ;;
         "subscraper")
             # Try multiple locations for subscraper
-            if [ -f "/root/subscraper/subscraper.py" ]; then
+            if [ -f "/opt/subscraper/subscraper.py" ]; then
+                echo "python3 /opt/subscraper/subscraper.py"
+            elif [ -f "/root/subscraper/subscraper.py" ]; then
                 echo "python3 /root/subscraper/subscraper.py"
             elif [ -f "~/subscraper/subscraper.py" ]; then
                 echo "python3 ~/subscraper/subscraper.py"
@@ -119,6 +121,20 @@ detect_tool_path() {
                 SUBSCRAPER_PATH=$(find / -name "subscraper.py" 2>/dev/null | head -1)
                 if [ -n "$SUBSCRAPER_PATH" ]; then
                     echo "python3 $SUBSCRAPER_PATH"
+                else
+                    echo ""
+                fi
+            fi
+            ;;
+        "subdominator")
+            # Enhanced detection for subdominator
+            if command -v subdominator >/dev/null 2>&1; then
+                echo "subdominator"
+            else
+                # Look for subdominator in common locations
+                SUBDOMINATOR_PATH=$(which subdominator 2>/dev/null || find / -name subdominator 2>/dev/null | grep bin/ | head -1)
+                if [ -n "$SUBDOMINATOR_PATH" ]; then
+                    echo "$SUBDOMINATOR_PATH"
                 else
                     echo ""
                 fi
@@ -207,61 +223,255 @@ install_tools() {
     log_info "Installing dependencies..."
     apt install -y curl wget git unzip tar snapd python3 python3-pip golang-go
     
-    # Install Go if needed
+    # 1. Install Go if needed
+    log_info "Checking Go installation..."
     if ! command -v go >/dev/null 2>&1; then
         log_info "Installing Go..."
-        wget -q https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
-        rm -rf /usr/local/go
-        tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
-        echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc
+        wget -q https://go.dev/dl/go1.22.3.linux-amd64.tar.gz \
+        && rm -rf /usr/local/go \
+        && tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz \
+        && echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc \
+        && echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.zshrc \
+        && source ~/.bashrc
+        
         export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
         rm go1.22.3.linux-amd64.tar.gz
+        
+        if command -v go >/dev/null 2>&1; then
+            log_success "Go installed successfully: $(go version)"
+        else
+            log_error "Go installation failed"
+        fi
+    else
+        log_success "Go is already installed: $(go version)"
     fi
     
-    # Install each tool
+    # 2. Install Subfinder
     log_info "Installing subfinder..."
     go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
     
-    log_info "Installing subdominator..."
-    pip install --upgrade subdominator --break-system-packages 2>/dev/null || {
-        git clone https://github.com/RevoltSecurities/Subdominator.git /tmp/Subdominator
-        cd /tmp/Subdominator
-        pip install -r requirements.txt --break-system-packages
-        pip install . --break-system-packages
-        cd -
-    }
+    if command -v subfinder >/dev/null 2>&1; then
+        log_success "Subfinder installed successfully"
+    else
+        log_error "Subfinder installation failed"
+    fi
     
+    # 3. Install Subdominator (comprehensive installation)
+    log_info "Installing subdominator with multiple methods..."
+    
+    # Install pip and pipx first
+    apt install -y python3-pip pipx
+    
+    # Method 1: pipx
+    log_info "Trying pipx installation..."
+    if pipx install git+https://github.com/RevoltSecurities/Subdominator 2>/dev/null; then
+        log_success "Subdominator installed via pipx (git)"
+    elif pipx install subdominator --force 2>/dev/null; then
+        log_success "Subdominator installed via pipx (package)"
+    else
+        log_warning "Pipx failed, trying pip methods..."
+        
+        # Method 2: pip with break-system-packages
+        pip install --upgrade subdominator --break-system-packages 2>/dev/null
+        pip install --upgrade git+https://github.com/RevoltSecurities/Subdominator --break-system-packages 2>/dev/null
+        
+        # Method 3: Manual installation if pip fails
+        if ! command -v subdominator >/dev/null 2>&1; then
+            log_info "Trying manual installation..."
+            git clone https://github.com/RevoltSecurities/Subdominator.git
+            cd Subdominator
+            pip install --upgrade pip --break-system-packages
+            pip install -r requirements.txt --break-system-packages
+            pip install . --break-system-packages
+            cd ..
+            
+            # Test installation
+            if ! command -v subdominator >/dev/null 2>&1; then
+                log_warning "Finding subdominator binary..."
+                SUBDOMINATOR_PATH=$(which subdominator 2>/dev/null || find / -name subdominator 2>/dev/null | grep bin/ | head -1)
+                
+                if [ -n "$SUBDOMINATOR_PATH" ]; then
+                    echo "export PATH=\$PATH:$(dirname $SUBDOMINATOR_PATH)" >> ~/.bashrc
+                    echo "export PATH=\$PATH:$(dirname $SUBDOMINATOR_PATH)" >> ~/.zshrc
+                    export PATH=$PATH:$(dirname $SUBDOMINATOR_PATH)
+                    log_success "Subdominator path added to shell profiles"
+                fi
+            fi
+        fi
+    fi
+    
+    # Install dependencies for Subdominator
+    log_info "Installing Subdominator dependencies..."
+    apt update && apt install -y \
+        libpango-1.0-0 \
+        libcairo2 \
+        libpangoft2-1.0-0 \
+        libpangocairo-1.0-0 \
+        libgdk-pixbuf2.0-0 \
+        libffi-dev \
+        shared-mime-info
+    
+    apt install -y libpango1.0-dev libcairo2-dev
+    
+    # Verify subdominator
+    if command -v subdominator >/dev/null 2>&1; then
+        log_success "Subdominator installed and working"
+    else
+        log_warning "Subdominator may need manual PATH configuration"
+    fi
+    
+    # 4. Install Amass
     log_info "Installing amass..."
-    apt install -y snapd
+    apt update && apt install -y snapd unzip curl
     systemctl enable --now snapd.socket
     snap install amass --classic
     
+    if command -v amass >/dev/null 2>&1; then
+        log_success "Amass installed successfully"
+    else
+        log_error "Amass installation failed"
+    fi
+    
+    # 5. Install Assetfinder
     log_info "Installing assetfinder..."
     go install github.com/tomnomnom/assetfinder@latest
     
+    if ! command -v assetfinder >/dev/null 2>&1; then
+        log_warning "Assetfinder failed, trying with newer Go..."
+        rm -rf /usr/local/go
+        wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
+        tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.zshrc
+        source ~/.bashrc
+        export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+        
+        log_info "Updated Go version: $(go version)"
+        go install github.com/tomnomnom/assetfinder@latest
+        rm go1.23.2.linux-amd64.tar.gz
+    fi
+    
+    if command -v assetfinder >/dev/null 2>&1; then
+        log_success "Assetfinder installed successfully"
+    else
+        log_error "Assetfinder installation failed"
+    fi
+    
+    # 6. Install Findomain
     log_info "Installing findomain..."
     curl -LO https://github.com/findomain/findomain/releases/latest/download/findomain-linux-i386.zip
+    apt install -y unzip
     unzip findomain-linux-i386.zip
     chmod +x findomain
     mv findomain /usr/local/bin/
     rm findomain-linux-i386.zip
     
+    if command -v findomain >/dev/null 2>&1; then
+        log_success "Findomain installed successfully"
+    else
+        log_error "Findomain installation failed"
+    fi
+    
+    # 7. Install Sublist3r
     log_info "Installing sublist3r..."
     git clone https://github.com/aboul3la/Sublist3r.git /opt/Sublist3r
     cd /opt/Sublist3r
     pip install -r requirements.txt --break-system-packages
+    
+    # Create symlink for easy access
     ln -sf /opt/Sublist3r/sublist3r.py /usr/local/bin/sublist3r
     chmod +x /usr/local/bin/sublist3r
     cd -
     
+    if [ -f "/opt/Sublist3r/sublist3r.py" ]; then
+        log_success "Sublist3r installed successfully"
+    else
+        log_error "Sublist3r installation failed"
+    fi
+    
+    # 8. Install Subscraper
     log_info "Installing subscraper..."
+    cd ~
     git clone https://github.com/m8sec/subscraper /opt/subscraper
     cd /opt/subscraper
+    
+    # Install all dependencies
     pip3 install -r requirements.txt --break-system-packages
+    pip3 install ipparser --break-system-packages
+    pip3 install taser --break-system-packages
+    
+    # Install additional packages
+    apt update && apt install -y python3-poetry
+    pip3 install taser --break-system-packages --no-deps
+    pip3 install beautifulsoup4 bs4 lxml ntlm-auth requests-file requests-ntlm tldextract selenium selenium-wire webdriver-manager --break-system-packages
+    pip3 install bs4 --break-system-packages
+    pip3 install requests_ntlm --break-system-packages
+    pip3 install tldextract --break-system-packages
+    pip3 install selenium --break-system-packages --no-deps
+    pip3 install trio trio-websocket certifi typing_extensions pysocks --break-system-packages
+    
     cd -
     
-    log_success "Installation completed! Please restart your terminal."
+    if [ -f "/opt/subscraper/subscraper.py" ]; then
+        log_success "Subscraper installed successfully"
+    else
+        log_error "Subscraper installation failed"
+    fi
+    
+    # Final Go PATH setup for both shells
+    log_info "Setting up Go PATH for bash and zsh..."
+    echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc
+    echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.zshrc 2>/dev/null || true
+    export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+    
+    log_success "Installation completed! Please restart your terminal or run:"
+    echo "  source ~/.bashrc"
     log_info "Test with: ./subdomains.sh --check"
+    
+    # Final verification
+    echo ""
+    echo -e "${PURPLE}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${PURPLE}${BOLD}                              INSTALLATION SUMMARY                             ${NC}"
+    echo -e "${PURPLE}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
+    
+    echo ""
+    log_info "Verifying all tools..."
+    
+    local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r" "subscraper")
+    local installed=0
+    local total=${#tools[@]}
+    
+    for tool in "${tools[@]}"; do
+        local tool_path=$(detect_tool_path "$tool")
+        if [ -n "$tool_path" ]; then
+            echo -e "${GREEN}✓${NC} $tool - ${GREEN}Available${NC} ($tool_path)"
+            ((installed++))
+        else
+            echo -e "${RED}✗${NC} $tool - ${RED}Not Found${NC}"
+        fi
+    done
+    
+    echo ""
+    echo -e "${BLUE}Final Status:${NC} $installed/$total tools successfully installed"
+    
+    if [ $installed -eq $total ]; then
+        echo -e "${GREEN}${BOLD}🎯 ALL TOOLS INSTALLED SUCCESSFULLY! 🎯${NC}"
+        echo -e "${CYAN}You can now run: ./subdomains.sh -d example.com${NC}"
+    elif [ $installed -gt 0 ]; then
+        echo -e "${YELLOW}${BOLD}⚠️  PARTIAL INSTALLATION COMPLETED ⚠️${NC}"
+        echo -e "${YELLOW}Some tools may need manual configuration or PATH updates.${NC}"
+        echo -e "${CYAN}Available tools can still be used with: ./subdomains.sh -d example.com${NC}"
+    else
+        echo -e "${RED}${BOLD}❌ INSTALLATION FAILED ❌${NC}"
+        echo -e "${RED}Please check the error messages above and try manual installation.${NC}"
+    fi
+    
+    echo ""
+    echo -e "${BLUE}${BOLD}NEXT STEPS:${NC}"
+    echo "1. Restart your terminal or run: source ~/.bashrc"
+    echo "2. Test installation: ./subdomains.sh --check"
+    echo "3. Run enumeration: ./subdomains.sh -d example.com"
+    echo ""
 }
 
 # Help Function
