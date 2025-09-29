@@ -789,16 +789,16 @@ run_enumeration() {
         case "$tool" in
             "subfinder")
                 if [ "$target_type" == "domain" ]; then
-                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target -silent${NC}"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
                     echo ""
-                    timeout 300 $tool_path -d "$target" -silent 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
+                    timeout 300 $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
                         log_warning "Subfinder timed out or failed for $target"
                         touch "$TEMP_DIR/subfinder.txt"
                     }
                 else
-                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target -silent${NC}"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target${NC}"
                     echo ""
-                    timeout 600 $tool_path -dL "$target" -silent 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
+                    timeout 600 $tool_path -dL "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subfinder.txt" 2>/dev/null || true) || {
                         log_warning "Subfinder timed out or failed for domain list"
                         touch "$TEMP_DIR/subfinder.txt"
                     }
@@ -806,17 +806,13 @@ run_enumeration() {
                 ;;
             "subdominator")
                 if [ "$target_type" == "domain" ]; then
-                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target -o /tmp/subdominator_temp.txt${NC}"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
                     echo ""
-                    $tool_path -d "$target" -o /tmp/subdominator_temp.txt 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
-                    [ -f /tmp/subdominator_temp.txt ] && cat /tmp/subdominator_temp.txt >> "$TEMP_DIR/subdominator.txt" 2>/dev/null
-                    rm -f /tmp/subdominator_temp.txt 2>/dev/null
+                    $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
                 else
-                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target -o /tmp/subdominator_temp.txt${NC}"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target${NC}"
                     echo ""
-                    $tool_path -dL "$target" -o /tmp/subdominator_temp.txt 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
-                    [ -f /tmp/subdominator_temp.txt ] && cat /tmp/subdominator_temp.txt >> "$TEMP_DIR/subdominator.txt" 2>/dev/null
-                    rm -f /tmp/subdominator_temp.txt 2>/dev/null
+                    $tool_path -dL "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/subdominator.txt" 2>/dev/null || true)
                 fi
                 ;;
             "amass")
