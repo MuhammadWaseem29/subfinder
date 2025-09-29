@@ -248,13 +248,18 @@ detect_tool_path() {
             fi
             ;;
         "sublist3r")
-            # Try multiple locations for sublist3r
-            if command -v sublist3r >/dev/null 2>&1; then
-                echo "sublist3r"
-            elif [ -f "/opt/Sublist3r/sublist3r.py" ]; then
+            # Try multiple locations for sublist3r - prioritize python3 versions
+            if [ -f "/opt/Sublist3r/sublist3r.py" ]; then
                 echo "python3 /opt/Sublist3r/sublist3r.py"
             elif [ -f "Sublist3r/sublist3r.py" ]; then
                 echo "python3 Sublist3r/sublist3r.py"
+            elif command -v sublist3r >/dev/null 2>&1; then
+                # Check if the sublist3r command uses python3
+                if head -1 "$(which sublist3r)" 2>/dev/null | grep -q "python3"; then
+                    echo "sublist3r"
+                else
+                    echo "python3 $(which sublist3r 2>/dev/null || echo '/opt/Sublist3r/sublist3r.py')"
+                fi
             else
                 SUBLIST3R_PATH=$(find / -name "sublist3r.py" 2>/dev/null | head -1)
                 if [ -n "$SUBLIST3R_PATH" ]; then
@@ -265,7 +270,7 @@ detect_tool_path() {
             fi
             ;;
         "subscraper")
-            # Try multiple locations for subscraper
+            # Try multiple locations for subscraper - always use python3
             if [ -f "/opt/subscraper/subscraper.py" ]; then
                 echo "python3 /opt/subscraper/subscraper.py"
             elif [ -f "/root/subscraper/subscraper.py" ]; then
@@ -548,8 +553,11 @@ install_tools() {
     cd /opt/Sublist3r
     pip install -r requirements.txt --break-system-packages
     
-    # Create symlink for easy access
-    ln -sf /opt/Sublist3r/sublist3r.py /usr/local/bin/sublist3r
+    # Create wrapper script instead of symlink to ensure python3 usage
+    cat > /usr/local/bin/sublist3r << 'EOF'
+#!/bin/bash
+python3 /opt/Sublist3r/sublist3r.py "$@"
+EOF
     chmod +x /usr/local/bin/sublist3r
     cd -
     
@@ -579,6 +587,13 @@ install_tools() {
     pip3 install tldextract --break-system-packages
     pip3 install selenium --break-system-packages --no-deps
     pip3 install trio trio-websocket certifi typing_extensions pysocks --break-system-packages
+    
+    # Create wrapper script for subscraper
+    cat > /usr/local/bin/subscraper << 'EOF'
+#!/bin/bash
+python3 /opt/subscraper/subscraper.py "$@"
+EOF
+    chmod +x /usr/local/bin/subscraper
     
     cd -
     
