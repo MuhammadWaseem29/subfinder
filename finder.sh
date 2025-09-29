@@ -30,6 +30,16 @@ cleanup() {
 # Set trap to cleanup on script interruption
 trap cleanup INT TERM
 
+# Domain validation function
+validate_domain() {
+    local domain="$1"
+    if [[ ! "$domain" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$ ]]; then
+        echo -e "${RED}Error: Invalid domain format: $domain${NC}"
+        return 1
+    fi
+    return 0
+}
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -98,14 +108,34 @@ if [ -n "$DOMAIN" ]; then
     
     echo -e "${BLUE}[6/7]${NC} ${YELLOW}Running${NC} ${GREEN}sublist3r${NC} for domain: ${CYAN}$DOMAIN${NC}..."
     echo "================================================================================================"
-    sublist3r -d "$DOMAIN" | tee "$TEMP_DIR/sublist3r.txt"
+    # Try multiple locations for sublist3r
+    if command -v sublist3r >/dev/null 2>&1; then
+        sublist3r -d "$DOMAIN" | tee "$TEMP_DIR/sublist3r.txt"
+    elif [ -f "Sublist3r/sublist3r.py" ]; then
+        python3 Sublist3r/sublist3r.py -d "$DOMAIN" | tee "$TEMP_DIR/sublist3r.txt"
+    elif [ -f "/opt/Sublist3r/sublist3r.py" ]; then
+        python3 /opt/Sublist3r/sublist3r.py -d "$DOMAIN" | tee "$TEMP_DIR/sublist3r.txt"
+    else
+        echo -e "${YELLOW}Warning: sublist3r not found, skipping...${NC}"
+        touch "$TEMP_DIR/sublist3r.txt"
+    fi
     echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} sublist3r"
     echo ""
     
     echo -e "${BLUE}[7/7]${NC} ${YELLOW}Running${NC} ${GREEN}subscraper${NC} for domain: ${CYAN}$DOMAIN${NC}..."
     echo "================================================================================================"
-    python3 /root/subscraper/subscraper.py -d "$DOMAIN" | tee "$TEMP_DIR/subscraper.txt"
+    # Try multiple locations for subscraper
+    if [ -f "/opt/subscraper/subscraper.py" ]; then
+        python3 /opt/subscraper/subscraper.py -d "$DOMAIN" | tee "$TEMP_DIR/subscraper.txt"
+    elif [ -f "/root/subscraper/subscraper.py" ]; then
+        python3 /root/subscraper/subscraper.py -d "$DOMAIN" | tee "$TEMP_DIR/subscraper.txt"
+    elif [ -f "subscraper/subscraper.py" ]; then
+        python3 subscraper/subscraper.py -d "$DOMAIN" | tee "$TEMP_DIR/subscraper.txt"
+    else
+        echo -e "${YELLOW}Warning: subscraper not found, skipping...${NC}"
+        touch "$TEMP_DIR/subscraper.txt"
+    fi
     echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} subscraper"
     echo ""
@@ -153,7 +183,17 @@ elif [ -n "$DOMAIN_FILE" ]; then
     echo -e "${BLUE}[6/7]${NC} ${YELLOW}Running${NC} ${GREEN}sublist3r${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
     echo "================================================================================================"
     while read -r domain; do
-        [ -n "$domain" ] && sublist3r -d "$domain" | tee -a "$TEMP_DIR/sublist3r.txt"
+        if [ -n "$domain" ]; then
+            if command -v sublist3r >/dev/null 2>&1; then
+                sublist3r -d "$domain" | tee -a "$TEMP_DIR/sublist3r.txt"
+            elif [ -f "Sublist3r/sublist3r.py" ]; then
+                python3 Sublist3r/sublist3r.py -d "$domain" | tee -a "$TEMP_DIR/sublist3r.txt"
+            elif [ -f "/opt/Sublist3r/sublist3r.py" ]; then
+                python3 /opt/Sublist3r/sublist3r.py -d "$domain" | tee -a "$TEMP_DIR/sublist3r.txt"
+            else
+                echo -e "${YELLOW}Warning: sublist3r not found for $domain, skipping...${NC}"
+            fi
+        fi
     done < "$DOMAIN_FILE"
     echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} sublist3r"
@@ -162,7 +202,17 @@ elif [ -n "$DOMAIN_FILE" ]; then
     echo -e "${BLUE}[7/7]${NC} ${YELLOW}Running${NC} ${GREEN}subscraper${NC} for domain list: ${CYAN}$DOMAIN_FILE${NC}..."
     echo "================================================================================================"
     while read -r domain; do
-        [ -n "$domain" ] && python3 /root/subscraper/subscraper.py -d "$domain" | tee -a "$TEMP_DIR/subscraper.txt"
+        if [ -n "$domain" ]; then
+            if [ -f "/opt/subscraper/subscraper.py" ]; then
+                python3 /opt/subscraper/subscraper.py -d "$domain" | tee -a "$TEMP_DIR/subscraper.txt"
+            elif [ -f "/root/subscraper/subscraper.py" ]; then
+                python3 /root/subscraper/subscraper.py -d "$domain" | tee -a "$TEMP_DIR/subscraper.txt"
+            elif [ -f "subscraper/subscraper.py" ]; then
+                python3 subscraper/subscraper.py -d "$domain" | tee -a "$TEMP_DIR/subscraper.txt"
+            else
+                echo -e "${YELLOW}Warning: subscraper not found for $domain, skipping...${NC}"
+            fi
+        fi
     done < "$DOMAIN_FILE"
     echo "================================================================================================"
     echo -e "${GREEN}✓ Completed${NC} subscraper"
@@ -179,7 +229,14 @@ fi
 # Merge all results, remove duplicates and sort
 echo "" 
 echo -e "${PURPLE}Merging results and removing duplicates...${NC}"
-cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | sort -u > "$OUTPUT_FILE"
+
+# Check if any result files exist
+if ls "$TEMP_DIR"/*.txt 1> /dev/null 2>&1; then
+    cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | grep -v '^#' | sort -u > "$OUTPUT_FILE"
+else
+    echo -e "${YELLOW}Warning: No result files found${NC}"
+    touch "$OUTPUT_FILE"
+fi
 
 # Clean up temporary files and any orphaned temp directories
 rm -rf "$TEMP_DIR"

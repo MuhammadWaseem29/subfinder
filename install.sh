@@ -57,19 +57,20 @@ if command_exists go; then
     print_success "Go is already installed: $(go version)"
 else
     print_status "Installing Go..."
-    wget -q https://go.dev/dl/go1.22.3.linux-amd64.tar.gz \
-    && sudo rm -rf /usr/local/go \
-    && sudo tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz \
-    && echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc \
-    && source ~/.bashrc
-    
-    # Update current session PATH
-    export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
-    
-    if command_exists go; then
-        print_success "Go installed successfully: $(go version)"
+    if wget -q https://go.dev/dl/go1.22.3.linux-amd64.tar.gz; then
+        sudo rm -rf /usr/local/go
+        sudo tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
+        echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc
+        export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+        rm go1.22.3.linux-amd64.tar.gz
+        
+        if command_exists go; then
+            print_success "Go installed successfully: $(go version)"
+        else
+            print_error "Go installation failed - PATH not updated properly"
+        fi
     else
-        print_error "Go installation failed"
+        print_error "Failed to download Go"
     fi
 fi
 
@@ -93,10 +94,22 @@ apt install -y pipx
 
 # Try multiple installation methods for Subdominator
 print_status "Attempting Subdominator installation (Method 1: pipx)..."
-pipx install git+https://github.com/RevoltSecurities/Subdominator
-
-print_status "Attempting Subdominator installation (Method 2: pipx force)..."
-pipx install subdominator --force
+if pipx install git+https://github.com/RevoltSecurities/Subdominator 2>/dev/null; then
+    print_success "Subdominator installed via pipx (git)"
+elif pipx install subdominator --force 2>/dev/null; then
+    print_success "Subdominator installed via pipx (package)"
+else
+    print_warning "Pipx installation failed, trying pip..."
+    pip install subdominator --break-system-packages 2>/dev/null || {
+        print_status "Trying manual installation..."
+        git clone https://github.com/RevoltSecurities/Subdominator.git /tmp/Subdominator
+        cd /tmp/Subdominator
+        pip install -r requirements.txt --break-system-packages
+        pip install . --break-system-packages
+        cd -
+        rm -rf /tmp/Subdominator
+    }
+fi
 
 print_status "Attempting Subdominator installation (Method 3: pip)..."
 pip install --upgrade subdominator --break-system-packages

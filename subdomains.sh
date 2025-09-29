@@ -1,0 +1,588 @@
+#!/bin/bash
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#                           SUBDOMAINS - Community Edition
+#                      Multi-Tool Subdomain Enumeration Framework
+# ═══════════════════════════════════════════════════════════════════════════════
+# 
+# Author: MuhammadWaseem29 (@MuhammadWaseem29)
+# Repository: https://github.com/MuhammadWaseem29/subfinder
+# Version: 2.0.0 Community Edition
+# License: MIT
+#
+# Description: A comprehensive subdomain enumeration tool that integrates 7
+#              powerful subdomain discovery tools with automated installation,
+#              intelligent path detection, and professional reporting.
+#
+# Supported Tools:
+#   • subfinder    - Fast passive subdomain discovery
+#   • subdominator - Advanced subdomain enumeration 
+#   • amass        - In-depth DNS enumeration and network mapping
+#   • assetfinder  - Find domains and subdomains related to a given domain
+#   • findomain    - Cross-platform subdomain enumerator
+#   • sublist3r    - Python-based subdomain discovery tool
+#   • subscraper   - DNS brute force + certificate transparency
+#
+# Usage:
+#   ./subdomains.sh -d example.com                    # Single domain
+#   ./subdomains.sh -dL domains.txt                   # Multiple domains
+#   ./subdomains.sh -d example.com -o results.txt     # Custom output
+#   ./subdomains.sh --install                         # Install all tools
+#   ./subdomains.sh --check                          # Check tool status
+#   ./subdomains.sh --help                           # Show help
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Script Configuration
+VERSION="2.0.0"
+AUTHOR="MuhammadWaseem29"
+OUTPUT_FILE="subdomains_$(date +%Y%m%d_%H%M%S).txt"
+TEMP_DIR="temp_subdomains_$$"
+REPORT_DIR="reports"
+
+# Color Definitions
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# Banner Function
+show_banner() {
+    echo -e "${CYAN}${BOLD}"
+    echo "╔═══════════════════════════════════════════════════════════════════════════════╗"
+    echo "║                         SUBDOMAINS - Community Edition                       ║"
+    echo "║                     Multi-Tool Subdomain Enumeration Framework               ║"
+    echo "║                                                                               ║"
+    echo "║  Version: $VERSION                                    Author: $AUTHOR  ║"
+    echo "║  Repository: https://github.com/MuhammadWaseem29/subfinder             ║"
+    echo "╚═══════════════════════════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+}
+
+# Logging Functions
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_progress() {
+    echo -e "${PURPLE}[PROGRESS]${NC} $1"
+}
+
+# Tool Detection Function
+detect_tool_path() {
+    local tool="$1"
+    
+    case "$tool" in
+        "sublist3r")
+            # Try multiple locations for sublist3r
+            if command -v sublist3r >/dev/null 2>&1; then
+                echo "sublist3r"
+            elif [ -f "Sublist3r/sublist3r.py" ]; then
+                echo "python3 Sublist3r/sublist3r.py"
+            elif [ -f "/opt/Sublist3r/sublist3r.py" ]; then
+                echo "python3 /opt/Sublist3r/sublist3r.py"
+            else
+                SUBLIST3R_PATH=$(find / -name "sublist3r.py" 2>/dev/null | head -1)
+                if [ -n "$SUBLIST3R_PATH" ]; then
+                    echo "python3 $SUBLIST3R_PATH"
+                else
+                    echo ""
+                fi
+            fi
+            ;;
+        "subscraper")
+            # Try multiple locations for subscraper
+            if [ -f "/root/subscraper/subscraper.py" ]; then
+                echo "python3 /root/subscraper/subscraper.py"
+            elif [ -f "~/subscraper/subscraper.py" ]; then
+                echo "python3 ~/subscraper/subscraper.py"
+            elif [ -f "subscraper/subscraper.py" ]; then
+                echo "python3 subscraper/subscraper.py"
+            else
+                SUBSCRAPER_PATH=$(find / -name "subscraper.py" 2>/dev/null | head -1)
+                if [ -n "$SUBSCRAPER_PATH" ]; then
+                    echo "python3 $SUBSCRAPER_PATH"
+                else
+                    echo ""
+                fi
+            fi
+            ;;
+        *)
+            if command -v "$tool" >/dev/null 2>&1; then
+                echo "$tool"
+            else
+                echo ""
+            fi
+            ;;
+    esac
+}
+
+# Tool Availability Check
+check_tools() {
+    local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r" "subscraper")
+    local available=0
+    local total=${#tools[@]}
+    
+    echo -e "${CYAN}${BOLD}Tool Availability Check:${NC}"
+    echo "────────────────────────────────────────────────────────────────"
+    
+    for tool in "${tools[@]}"; do
+        local tool_path=$(detect_tool_path "$tool")
+        if [ -n "$tool_path" ]; then
+            echo -e "${GREEN}✓${NC} $tool - ${GREEN}Available${NC} ($tool_path)"
+            ((available++))
+        else
+            echo -e "${RED}✗${NC} $tool - ${RED}Not Found${NC}"
+        fi
+    done
+    
+    echo "────────────────────────────────────────────────────────────────"
+    echo -e "${BLUE}Status:${NC} $available/$total tools available"
+    
+    if [ $available -eq $total ]; then
+        log_success "All tools are ready! 🎯"
+        return 0
+    elif [ $available -gt 0 ]; then
+        log_warning "Some tools are missing. Run './subdomains.sh --install' to install missing tools."
+        return 1
+    else
+        log_error "No tools found! Please run './subdomains.sh --install' first."
+        return 2
+    fi
+}
+
+# Cleanup Function
+cleanup() {
+    echo ""
+    log_info "Cleaning up temporary files..."
+    rm -rf "$TEMP_DIR" 2>/dev/null
+    rm -rf temp_subdomains_* 2>/dev/null
+    log_success "Cleanup completed"
+    exit 1
+}
+
+# Set trap for cleanup on interruption
+trap cleanup INT TERM
+
+# Installation Function
+install_tools() {
+    show_banner
+    log_info "Starting automated tool installation..."
+    
+    # Check if running as root
+    if [ "$EUID" -ne 0 ]; then
+        log_error "Installation requires root privileges. Please run with sudo."
+        log_info "Example: sudo ./subdomains.sh --install"
+        exit 1
+    fi
+    
+    # Check internet connectivity
+    if ! ping -c 1 google.com &> /dev/null; then
+        log_error "No internet connection. Please check your network."
+        exit 1
+    fi
+    
+    # Update system
+    log_info "Updating system packages..."
+    apt update && apt upgrade -y
+    
+    # Install dependencies
+    log_info "Installing dependencies..."
+    apt install -y curl wget git unzip tar snapd python3 python3-pip golang-go
+    
+    # Install Go if needed
+    if ! command -v go >/dev/null 2>&1; then
+        log_info "Installing Go..."
+        wget -q https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
+        rm -rf /usr/local/go
+        tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
+        echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc
+        export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+        rm go1.22.3.linux-amd64.tar.gz
+    fi
+    
+    # Install each tool
+    log_info "Installing subfinder..."
+    go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+    
+    log_info "Installing subdominator..."
+    pip install --upgrade subdominator --break-system-packages 2>/dev/null || {
+        git clone https://github.com/RevoltSecurities/Subdominator.git /tmp/Subdominator
+        cd /tmp/Subdominator
+        pip install -r requirements.txt --break-system-packages
+        pip install . --break-system-packages
+        cd -
+    }
+    
+    log_info "Installing amass..."
+    apt install -y snapd
+    systemctl enable --now snapd.socket
+    snap install amass --classic
+    
+    log_info "Installing assetfinder..."
+    go install github.com/tomnomnom/assetfinder@latest
+    
+    log_info "Installing findomain..."
+    curl -LO https://github.com/findomain/findomain/releases/latest/download/findomain-linux-i386.zip
+    unzip findomain-linux-i386.zip
+    chmod +x findomain
+    mv findomain /usr/local/bin/
+    rm findomain-linux-i386.zip
+    
+    log_info "Installing sublist3r..."
+    git clone https://github.com/aboul3la/Sublist3r.git /opt/Sublist3r
+    cd /opt/Sublist3r
+    pip install -r requirements.txt --break-system-packages
+    ln -sf /opt/Sublist3r/sublist3r.py /usr/local/bin/sublist3r
+    chmod +x /usr/local/bin/sublist3r
+    cd -
+    
+    log_info "Installing subscraper..."
+    git clone https://github.com/m8sec/subscraper /opt/subscraper
+    cd /opt/subscraper
+    pip3 install -r requirements.txt --break-system-packages
+    cd -
+    
+    log_success "Installation completed! Please restart your terminal."
+    log_info "Test with: ./subdomains.sh --check"
+}
+
+# Help Function
+show_help() {
+    show_banner
+    echo -e "${YELLOW}${BOLD}USAGE:${NC}"
+    echo "  $0 [OPTIONS] -d <domain>                 Single domain enumeration"
+    echo "  $0 [OPTIONS] -dL <file>                  Multiple domains from file"
+    echo ""
+    echo -e "${YELLOW}${BOLD}OPTIONS:${NC}"
+    echo "  -d  <domain>              Target domain to enumerate"
+    echo "  -dL <file>               File containing list of domains (one per line)"
+    echo "  -o  <output_file>        Custom output file (default: subdomains_TIMESTAMP.txt)"
+    echo "  -r  <report_name>        Generate detailed report"
+    echo "  --install                Install all required tools"
+    echo "  --check                  Check tool availability"
+    echo "  --update                 Update all tools to latest versions"
+    echo "  --version                Show version information"
+    echo "  --help                   Show this help message"
+    echo ""
+    echo -e "${YELLOW}${BOLD}EXAMPLES:${NC}"
+    echo "  $0 -d example.com                        # Basic enumeration"
+    echo "  $0 -d example.com -o results.txt         # Custom output file"
+    echo "  $0 -dL domains.txt -r security_audit     # Multiple domains with report"
+    echo "  $0 --install                             # Install all tools"
+    echo "  $0 --check                               # Check tool status"
+    echo ""
+    echo -e "${YELLOW}${BOLD}SUPPORTED TOOLS:${NC}"
+    echo "  • subfinder    - Fast passive subdomain discovery"
+    echo "  • subdominator - Advanced subdomain enumeration"
+    echo "  • amass        - In-depth DNS enumeration and network mapping"
+    echo "  • assetfinder  - Find domains and subdomains"
+    echo "  • findomain    - Cross-platform subdomain enumerator"
+    echo "  • sublist3r    - Python-based subdomain discovery"
+    echo "  • subscraper   - DNS brute force + certificate transparency"
+    echo ""
+    echo -e "${CYAN}For more information, visit: https://github.com/MuhammadWaseem29/subfinder${NC}"
+}
+
+# Generate Report Function
+generate_report() {
+    local domain="$1"
+    local report_name="$2"
+    local total_subs="$3"
+    
+    mkdir -p "$REPORT_DIR"
+    local report_file="$REPORT_DIR/${report_name}_$(date +%Y%m%d_%H%M%S).html"
+    
+    cat > "$report_file" << EOF
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subdomain Enumeration Report - $domain</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; }
+        .stats { background: #ecf0f1; padding: 15px; margin: 20px 0; border-radius: 8px; }
+        .tool-section { margin: 20px 0; padding: 15px; border-left: 4px solid #3498db; }
+        .subdomain { font-family: monospace; background: #f8f9fa; padding: 2px 5px; margin: 2px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Subdomain Enumeration Report</h1>
+        <p>Domain: <strong>$domain</strong> | Generated: $(date) | Tool: SUBDOMAINS v$VERSION</p>
+    </div>
+    
+    <div class="stats">
+        <h2>Summary</h2>
+        <p><strong>Total Unique Subdomains Found:</strong> $total_subs</p>
+        <p><strong>Tools Used:</strong> 7 (subfinder, subdominator, amass, assetfinder, findomain, sublist3r, subscraper)</p>
+        <p><strong>Output File:</strong> $OUTPUT_FILE</p>
+    </div>
+    
+    <div class="tool-section">
+        <h2>Discovered Subdomains</h2>
+        <div>
+EOF
+
+    # Add subdomains to report
+    while read -r subdomain; do
+        echo "            <span class=\"subdomain\">$subdomain</span>" >> "$report_file"
+    done < "$OUTPUT_FILE"
+    
+    cat >> "$report_file" << EOF
+        </div>
+    </div>
+    
+    <footer style="margin-top: 40px; text-align: center; color: #7f8c8d;">
+        <p>Generated by SUBDOMAINS Community Edition v$VERSION | Author: $AUTHOR</p>
+        <p>Repository: https://github.com/MuhammadWaseem29/subfinder</p>
+    </footer>
+</body>
+</html>
+EOF
+
+    log_success "HTML report generated: $report_file"
+}
+
+# Main Enumeration Function
+run_enumeration() {
+    local target="$1"
+    local target_type="$2"  # "domain" or "file"
+    
+    show_banner
+    
+    # Create directories
+    rm -rf temp_subdomains_* 2>/dev/null
+    mkdir -p "$TEMP_DIR" "$REPORT_DIR"
+    
+    # Check tools before starting
+    check_tools
+    local tool_status=$?
+    if [ $tool_status -eq 2 ]; then
+        log_error "Cannot proceed without tools. Run --install first."
+        exit 1
+    fi
+    
+    log_info "Starting subdomain enumeration for: $target"
+    log_info "Output will be saved to: $OUTPUT_FILE"
+    echo ""
+    
+    # Tool execution with dynamic path detection
+    local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r" "subscraper")
+    local completed=0
+    
+    for i in "${!tools[@]}"; do
+        local tool="${tools[$i]}"
+        local tool_num=$((i + 1))
+        local tool_path=$(detect_tool_path "$tool")
+        
+        if [ -z "$tool_path" ]; then
+            log_warning "[$tool_num/7] Skipping $tool - not found"
+            continue
+        fi
+        
+        echo -e "${BLUE}[$tool_num/7]${NC} ${YELLOW}Running${NC} ${GREEN}$tool${NC} for $target_type: ${CYAN}$target${NC}..."
+        echo "════════════════════════════════════════════════════════════════════════════════"
+        
+        case "$tool" in
+            "subfinder")
+                if [ "$target_type" == "domain" ]; then
+                    timeout 300 $tool_path -d "$target" 2>/dev/null | tee "$TEMP_DIR/subfinder.txt" || {
+                        log_warning "Subfinder timed out or failed for $target"
+                        touch "$TEMP_DIR/subfinder.txt"
+                    }
+                else
+                    timeout 600 $tool_path -dL "$target" 2>/dev/null | tee "$TEMP_DIR/subfinder.txt" || {
+                        log_warning "Subfinder timed out or failed for domain list"
+                        touch "$TEMP_DIR/subfinder.txt"
+                    }
+                fi
+                ;;
+            "subdominator")
+                if [ "$target_type" == "domain" ]; then
+                    $tool_path -d "$target" | tee "$TEMP_DIR/subdominator.txt"
+                else
+                    $tool_path -dL "$target" | tee "$TEMP_DIR/subdominator.txt"
+                fi
+                ;;
+            "amass")
+                if [ "$target_type" == "domain" ]; then
+                    $tool_path enum -passive -d "$target" | tee "$TEMP_DIR/amass.txt"
+                else
+                    while read -r domain; do
+                        [ -n "$domain" ] && $tool_path enum -passive -d "$domain" | tee -a "$TEMP_DIR/amass.txt"
+                    done < "$target"
+                fi
+                ;;
+            "assetfinder")
+                if [ "$target_type" == "domain" ]; then
+                    $tool_path --subs-only "$target" | tee "$TEMP_DIR/assetfinder.txt"
+                else
+                    while read -r domain; do
+                        [ -n "$domain" ] && $tool_path --subs-only "$domain" | tee -a "$TEMP_DIR/assetfinder.txt"
+                    done < "$target"
+                fi
+                ;;
+            "findomain")
+                if [ "$target_type" == "domain" ]; then
+                    $tool_path -t "$target" | tee "$TEMP_DIR/findomain.txt"
+                else
+                    $tool_path -f "$target" | tee "$TEMP_DIR/findomain.txt"
+                fi
+                ;;
+            "sublist3r")
+                if [ "$target_type" == "domain" ]; then
+                    $tool_path -d "$target" | tee "$TEMP_DIR/sublist3r.txt"
+                else
+                    while read -r domain; do
+                        [ -n "$domain" ] && $tool_path -d "$domain" | tee -a "$TEMP_DIR/sublist3r.txt"
+                    done < "$target"
+                fi
+                ;;
+            "subscraper")
+                if [ "$target_type" == "domain" ]; then
+                    $tool_path -d "$target" | tee "$TEMP_DIR/subscraper.txt"
+                else
+                    while read -r domain; do
+                        [ -n "$domain" ] && $tool_path -d "$domain" | tee -a "$TEMP_DIR/subscraper.txt"
+                    done < "$target"
+                fi
+                ;;
+        esac
+        
+        echo "════════════════════════════════════════════════════════════════════════════════"
+        log_success "Completed $tool"
+        echo ""
+        ((completed++))
+    done
+    
+    # Merge results
+    echo ""
+    log_progress "Merging results and removing duplicates..."
+    cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | sort -u > "$OUTPUT_FILE"
+    
+    # Cleanup
+    rm -rf "$TEMP_DIR"
+    rm -rf temp_subdomains_* 2>/dev/null
+    
+    # Results
+    local total_subs=$(wc -l < "$OUTPUT_FILE" 2>/dev/null || echo "0")
+    echo ""
+    echo -e "${GREEN}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}${BOLD}                              RESULTS SUMMARY                                ${NC}"
+    echo -e "${GREEN}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${WHITE}Target:${NC}                 $target"
+    echo -e "${WHITE}Tools Executed:${NC}         $completed/7"
+    echo -e "${WHITE}Total Subdomains Found:${NC} ${YELLOW}${BOLD}$total_subs${NC}"
+    echo -e "${WHITE}Output File:${NC}            ${CYAN}$OUTPUT_FILE${NC}"
+    echo -e "${WHITE}Execution Time:${NC}        $(date)"
+    echo -e "${GREEN}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
+    
+    # Generate report if requested
+    if [ -n "$REPORT_NAME" ]; then
+        generate_report "$target" "$REPORT_NAME" "$total_subs"
+    fi
+    
+    log_success "Subdomain enumeration completed! 🎯"
+}
+
+# Main Script Logic
+main() {
+    # Default values
+    DOMAIN=""
+    DOMAIN_FILE=""
+    REPORT_NAME=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -d)
+                DOMAIN="$2"
+                shift 2
+                ;;
+            -dL)
+                DOMAIN_FILE="$2"
+                shift 2
+                ;;
+            -o)
+                OUTPUT_FILE="$2"
+                shift 2
+                ;;
+            -r)
+                REPORT_NAME="$2"
+                shift 2
+                ;;
+            --install)
+                install_tools
+                exit 0
+                ;;
+            --check)
+                show_banner
+                check_tools
+                exit $?
+                ;;
+            --version)
+                show_banner
+                echo -e "${WHITE}Version:${NC} $VERSION"
+                echo -e "${WHITE}Author:${NC} $AUTHOR"
+                echo -e "${WHITE}Repository:${NC} https://github.com/MuhammadWaseem29/subfinder"
+                exit 0
+                ;;
+            --help|-h)
+                show_help
+                exit 0
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                echo "Use --help for usage information."
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Validate arguments
+    if [ -n "$DOMAIN" ] && [ -n "$DOMAIN_FILE" ]; then
+        log_error "Cannot use both -d and -dL options simultaneously."
+        exit 1
+    fi
+    
+    if [ -z "$DOMAIN" ] && [ -z "$DOMAIN_FILE" ]; then
+        show_help
+        exit 1
+    fi
+    
+    # Execute enumeration
+    if [ -n "$DOMAIN" ]; then
+        run_enumeration "$DOMAIN" "domain"
+    elif [ -n "$DOMAIN_FILE" ]; then
+        if [ ! -f "$DOMAIN_FILE" ]; then
+            log_error "Domain file not found: $DOMAIN_FILE"
+            exit 1
+        fi
+        if [ ! -s "$DOMAIN_FILE" ]; then
+            log_error "Domain file is empty: $DOMAIN_FILE"
+            exit 1
+        fi
+        run_enumeration "$DOMAIN_FILE" "file"
+    fi
+}
+
+# Execute main function
+main "$@"

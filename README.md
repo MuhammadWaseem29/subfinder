@@ -1,170 +1,177 @@
-# Subfinder - Multi-Tool Subdomain Enumeration Script
+# SUBDOMAINS - Community Edition 🎯
 
-A comprehensive bash script that automates subdomain discovery using multiple popular tools.
+A comprehensive subdomain enumeration framework that combines the power of 7 advanced tools with automated installation and professional reporting capabilities.
 
-## Features
+## 🌟 Community Edition Features
 
-- **Multiple Tools Integration**: Uses 6 different subdomain enumeration tools
-- **Single Domain Mode**: `-d domain.com` for scanning one domain
-- **Bulk Mode**: `-dL domains.txt` for scanning multiple domains from a file
-- **Output Consolidation**: All results saved to `all_subdomains.txt` with duplicates removed
-- **Easy Extension**: Simple structure to add more tools
+**SUBDOMAINS v2.0** is the complete, production-ready solution for subdomain discovery:
 
-## Supported Tools
+- **🔧 All-in-One Solution**: Combined enumeration and installation in one script
+- **🎯 7 Integrated Tools**: Best-in-class subdomain discovery tools
+- **📊 Professional Reporting**: HTML reports with detailed analytics
+- **🎨 Beautiful Interface**: Colored output with progress tracking
+- **🔍 Smart Tool Detection**: Automatic path discovery and fallback
+- **📁 Organized Output**: Timestamped files and report directories
+- **⚡ Fast & Reliable**: Optimized execution with error handling
 
-1. **subfinder** - Fast subdomain discovery tool
-2. **subdominator** - Advanced subdomain enumeration 
+## 🛠️ Supported Tools
+
+This framework integrates **7 powerful subdomain enumeration tools**:
+
+1. **subfinder** - Fast passive subdomain discovery
+2. **subdominator** - Advanced subdomain enumeration  
 3. **amass** - In-depth DNS enumeration and network mapping
 4. **assetfinder** - Find domains and subdomains related to a given domain
 5. **findomain** - Cross-platform subdomain enumerator
-6. **sublist3r** - Python subdomain enumeration tool
+6. **sublist3r** - Python-based subdomain discovery tool
+7. **subscraper** - DNS brute force + certificate transparency
 
-## Usage
+## 📋 Key Features
 
-### Single Domain
-```bash
-./subfinder.sh -d example.com
-```
+- **🚀 One-Command Installation**: Automated setup for all tools
+- **🎯 Multi-tool Integration**: Combines 7 different subdomain discovery tools
+- **📝 Dual Input Methods**: Single domain (`-d`) or domain list (`-dL`)
+- **📊 HTML Reports**: Professional reporting with detailed analytics
+- **🎨 Colored Interface**: Beautiful progress indicators and status messages
+- **🧹 Smart Cleanup**: Automatic temporary file management
+- **🔧 Tool Detection**: Intelligent path discovery for all tools
+- **⚠️ Signal Handling**: Graceful interruption handling
+- **📁 Organized Output**: Timestamped files and structured directories
 
-### Multiple Domains from File
-```bash
-./subfinder.sh -dL domains.txt
-```
+## 🚀 Quick Start
 
-### Help
-```bash
-./subfinder.sh -h
-```
+### Option 1: Community Edition (Recommended)
 
-## Options
-
-- `-d <domain>`: Target a single domain
-- `-dL <file>`: Process multiple domains from a file
-- `-h, --help`: Show help message
-
-## Requirements
-
-The script uses these tools (install if missing):
-- `dig` - DNS lookup utility
-- `host` - DNS lookup utility  
-- `curl` - For Certificate Transparency queries
-
-### Installing Requirements on macOS
-```bash
-# dig and host are usually pre-installed
-# For curl (if missing):
-brew install curl
-```
-
-### Installing Requirements on Ubuntu/Debian
-```bash
-sudo apt update
-sudo apt install dnsutils curl
-```
-
-## Output
-
-Results are saved in the `results/` directory:
-- `results/domain.com/dns_subdomains.txt` - DNS enumeration results
-- `results/domain.com/crt_subdomains.txt` - Certificate Transparency results  
-- `results/domain.com/bruteforce_subdomains.txt` - Brute force results
-- `results/domain.com/all_subdomains.txt` - Combined deduplicated results
-
-## Domain List Format
-
-Create a text file with one domain per line:
-```
-example.com
-google.com
-github.com
-# This is a comment - it will be ignored
-```
-
-## Extending the Tool
-
-The script is designed to be easily extensible. You can add more subdomain finder tools by:
-
-1. Creating new functions for different enumeration techniques
-2. Adding them to the `process_domain()` function
-3. Running them in parallel with `&` and `wait`
-
-### Example: Adding a new tool
-```bash
-# New enumeration function
-custom_enumeration() {
-    local domain=$1
-    local output_dir=$2
-    local output_file="${output_dir}/custom_subdomains.txt"
-    
-    log "INFO" "Running custom enumeration for ${domain}"
-    
-    # Your enumeration logic here
-    # Save results to $output_file
-    
-    local count=$(wc -l < "$output_file" 2>/dev/null || echo "0")
-    log "INFO" "Custom enumeration completed. Found ${count} subdomains"
-}
-
-# Add to process_domain() function
-custom_enumeration "$domain" "$output_dir" &
-```
-
-## Examples
-
-### Basic usage
-```bash
-./subfinder.sh -d google.com
-```
-
-### Using domain list
-```bash
-./subfinder.sh -dL domains.txt
-```
-
-### Sample output
-```
-╔═══════════════════════════════════════════════════════════╗
-║                    SUBFINDER v1.0                        ║
-║              Subdomain Enumeration Tool                  ║
-║                   By: Waseem                            ║
-╚═══════════════════════════════════════════════════════════╝
-
-[2025-09-28 10:30:15] [INFO] Starting subdomain enumeration for: google.com
-[2025-09-28 10:30:15] [INFO] Starting DNS enumeration for google.com
-[2025-09-28 10:30:15] [INFO] Checking Certificate Transparency logs for google.com
-[2025-09-28 10:30:15] [INFO] Starting subdomain brute force for google.com
-[2025-09-28 10:30:16] [SUCCESS] Found: www.google.com
-[2025-09-28 10:30:17] [SUCCESS] Found: mail.google.com
-...
-[2025-09-28 10:30:45] [SUCCESS] Total unique subdomains found for google.com: 25
-
-Results saved to: results/google.com/all_subdomains.txt
-```
-
-### Multiple Domains from File
-```bash
-./subfinder.sh -dL domains.txt
-```
-
-## Output
-
-All results are automatically saved to `all_subdomains.txt` with duplicates removed and sorted.
-
-## Installation Requirements
-
-Make sure you have these tools installed:
+**Download and use the all-in-one solution:**
 
 ```bash
-# subfinder
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+# Download
+wget https://raw.githubusercontent.com/MuhammadWaseem29/subfinder/main/subdomains.sh
+chmod +x subdomains.sh
 
-# subdominator  
-pip install subdominator
+# Install all tools (run as root)
+sudo ./subdomains.sh --install
 
-# amass
-go install -v github.com/owasp-amass/amass/v4/...@master
+# Check tool availability
+./subdomains.sh --check
 
-# assetfinder
+# Run enumeration
+./subdomains.sh -d example.com
+# Clone repository
+git clone https://github.com/MuhammadWaseem29/subfinder.git
+cd subfinder
+
+# Install all tools
+sudo bash install.sh
+
+# Run enumeration
+./finder.sh -d example.com
+```
+
+## 🎯 Usage Examples
+
+### Community Edition (subdomains.sh)
+
+```bash
+# Install all tools
+sudo ./subdomains.sh --install
+
+# Check tool availability
+./subdomains.sh --check
+
+# Single domain enumeration
+./subdomains.sh -d example.com
+
+# Multiple domains from file
+./subdomains.sh -dL domains.txt
+
+# Custom output file
+./subdomains.sh -d example.com -o my_results.txt
+
+# Generate HTML report
+./subdomains.sh -d example.com -r security_audit
+
+# Show help
+./subdomains.sh --help
+
+# Show version
+./subdomains.sh --version
+```
+
+### Legacy Components
+
+```bash
+# finder.sh (enumeration)
+./finder.sh -d example.com
+./finder.sh -dL domains.txt -o custom_output.txt
+
+# install.sh (setup)
+sudo bash install.sh
+```
+
+## 📊 Output Structure
+
+### Community Edition Output:
+```
+📁 Current Directory
+├── subdomains_20240128_143022.txt    # Timestamped results
+├── 📁 reports/                       # HTML reports (with -r flag)
+│   └── security_audit_20240128_143022.html
+└── 📁 temp_subdomains_*/ (auto-cleaned)
+```
+
+### Legacy Output:
+```
+📁 Project Directory
+├── all_subdomains.txt                # Combined results
+└── temp_finder_*/                    # Temporary files
+```
+
+## 🔧 Advanced Features
+
+### Tool Status Checking
+```bash
+./subdomains.sh --check
+```
+
+### Custom Output Files
+```bash
+./subdomains.sh -d example.com -o company_subdomains.txt
+```
+
+### HTML Report Generation
+```bash
+./subdomains.sh -d example.com -r penetration_test
+```
+
+### Bulk Domain Processing
+```bash
+# Create domains.txt file
+echo "example.com" > domains.txt
+echo "target.com" >> domains.txt
+echo "company.com" >> domains.txt
+
+# Run bulk enumeration
+./subdomains.sh -dL domains.txt -r bulk_audit
+```
+
+## 📋 Tool Installation Status
+
+The community edition automatically detects and installs missing tools:
+
+| Tool | Status Check | Auto-Install | Fallback Paths |
+|------|-------------|--------------|----------------|
+| subfinder | ✅ | ✅ | Go binary detection |
+| subdominator | ✅ | ✅ | Pip package + Git clone |
+| amass | ✅ | ✅ | Snap package |
+| assetfinder | ✅ | ✅ | Go binary detection |
+| findomain | ✅ | ✅ | Binary download |
+| sublist3r | ✅ | ✅ | Multiple path detection |
+| subscraper | ✅ | ✅ | Git clone installation |
+
+## 🛠️ Manual Installation
+
+If you prefer manual installation of tools:
 go install github.com/tomnomnom/assetfinder@latest
 
 # findomain
@@ -173,8 +180,127 @@ go install github.com/tomnomnom/assetfinder@latest
 # sublist3r
 git clone https://github.com/aboul3la/Sublist3r.git
 pip install -r Sublist3r/requirements.txt
+
+# subscraper
+git clone https://github.com/m8sec/subscraper
+cd subscraper && pip3 install -r requirements.txt
 ```
 
-## Contributing
+## 📝 Domain List Format
 
-Feel free to add more subdomain enumeration tools to make this script more comprehensive!
+Create a text file with one domain per line:
+```
+example.com
+google.com
+github.com
+target.org
+# Comments are supported
+```
+
+## 🔍 Tool Detection Intelligence
+
+The community edition features smart tool detection:
+
+- **Automatic Path Discovery**: Finds tools in standard locations
+- **Multiple Installation Methods**: Supports various installation paths
+- **Fallback Mechanisms**: Uses alternative paths when needed
+- **Binary Validation**: Ensures tools are executable and accessible
+
+## 🎨 Visual Interface
+
+The community edition includes:
+
+- **🎯 Progress Indicators**: Real-time tool execution status
+- **🌈 Color-coded Output**: Different colors for different message types
+- **📊 Professional Banners**: Clean, branded interface
+- **📈 Results Summary**: Detailed statistics and completion status
+
+## 🧹 Cleanup & Management
+
+- **Automatic Cleanup**: Removes temporary files on completion
+- **Signal Handling**: Graceful shutdown on interruption (Ctrl+C)
+- **Organized Output**: Timestamped files prevent overwrites
+- **Report Management**: Structured report directory
+
+## 🚀 Performance Features
+
+- **Parallel Execution**: Tools run simultaneously for speed
+- **Optimized Output**: Efficient file handling and deduplication
+- **Memory Management**: Proper resource cleanup
+- **Error Resilience**: Continues execution even if some tools fail
+
+## 📊 Sample Output
+
+```bash
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                         SUBDOMAINS - Community Edition                       ║
+║                     Multi-Tool Subdomain Enumeration Framework               ║
+║                                                                               ║
+║  Version: 2.0.0                                    Author: MuhammadWaseem29  ║
+║  Repository: https://github.com/MuhammadWaseem29/subfinder                   ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+[INFO] Starting subdomain enumeration for: example.com
+[INFO] Output will be saved to: subdomains_20240128_143022.txt
+
+[1/7] Running subfinder for domain: example.com...
+[2/7] Running subdominator for domain: example.com...
+[3/7] Running amass for domain: example.com...
+[4/7] Running assetfinder for domain: example.com...
+[5/7] Running findomain for domain: example.com...
+[6/7] Running sublist3r for domain: example.com...
+[7/7] Running subscraper for domain: example.com...
+
+[PROGRESS] Merging results and removing duplicates...
+
+═══════════════════════════════════════════════════════════════════════════════
+                              RESULTS SUMMARY                                
+═══════════════════════════════════════════════════════════════════════════════
+Target:                 example.com
+Tools Executed:         7/7
+Total Subdomains Found: 147
+Output File:            subdomains_20240128_143022.txt
+Execution Time:         2024-01-28 14:30:22
+═══════════════════════════════════════════════════════════════════════════════
+
+[SUCCESS] Subdomain enumeration completed! 🎯
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## ⭐ Star History
+
+If you find this tool useful, please consider giving it a star! ⭐
+
+## 📞 Support
+
+- 🐛 **Bug Reports**: [Open an issue](https://github.com/MuhammadWaseem29/subfinder/issues)
+- 💡 **Feature Requests**: [Submit a request](https://github.com/MuhammadWaseem29/subfinder/issues)
+- 💬 **Discussions**: [Join the conversation](https://github.com/MuhammadWaseem29/subfinder/discussions)
+
+## 🙏 Acknowledgments
+
+Special thanks to the developers of the integrated tools:
+- [ProjectDiscovery](https://github.com/projectdiscovery) for subfinder
+- [RevoltSecurities](https://github.com/RevoltSecurities) for subdominator
+- [OWASP](https://github.com/owasp-amass) for amass
+- [tomnomnom](https://github.com/tomnomnom) for assetfinder
+- [Findomain](https://github.com/findomain) for findomain
+- [aboul3la](https://github.com/aboul3la) for sublist3r
+- [m8sec](https://github.com/m8sec) for subscraper
+
+---
+
+<div align="center">
+  <strong>Made with ❤️ by <a href="https://github.com/MuhammadWaseem29">MuhammadWaseem29</a></strong>
+</div>
