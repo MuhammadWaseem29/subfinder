@@ -398,6 +398,10 @@ install_tools() {
     log_info "Installing dependencies..."
     apt install -y curl wget git unzip tar snapd python3 python3-pip golang-go
     
+    # Install GitHub CLI
+    log_info "Installing GitHub CLI (gh)..."
+    apt install -y gh
+    
     # 1. Install Go if needed
     log_info "Checking Go installation..."
     if ! command -v go >/dev/null 2>&1; then
