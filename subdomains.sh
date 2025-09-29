@@ -11,7 +11,7 @@
 # License: MIT
 #
 # Description: FINDER is a comprehensive enterprise-grade subdomain enumeration
-#              framework that integrates 7 powerful reconnaissance tools with
+#              framework that integrates 8 powerful reconnaissance tools with
 #              automated installation, intelligent path detection, and
 #              professional reporting capabilities.
 #
@@ -20,6 +20,7 @@
 #   • subdominator - Advanced subdomain enumeration 
 #   • amass        - In-depth DNS enumeration and network mapping
 #   • assetfinder  - Find domains and subdomains related to a given domain
+#   • chaos        - ProjectDiscovery's subdomain discovery service
 #   • findomain    - Cross-platform subdomain enumerator
 #   • sublist3r    - Python-based subdomain discovery tool
 #   • subscraper   - DNS brute force + certificate transparency
@@ -306,6 +307,42 @@ detect_tool_path() {
                 fi
             fi
             ;;
+        "chaos")
+            # Enhanced detection for chaos
+            if command -v chaos >/dev/null 2>&1; then
+                echo "chaos"
+            elif [ -f "$HOME/go/bin/chaos" ]; then
+                echo "$HOME/go/bin/chaos"
+            elif [ -f "/root/go/bin/chaos" ]; then
+                echo "/root/go/bin/chaos"
+            else
+                # Search for chaos binary
+                CHAOS_PATH=$(find /root/go /home/*/go $HOME/go -name "chaos" 2>/dev/null | head -1)
+                if [ -n "$CHAOS_PATH" ]; then
+                    echo "$CHAOS_PATH"
+                else
+                    echo ""
+                fi
+            fi
+            ;;
+        "chaos")
+            # Enhanced detection for chaos
+            if command -v chaos >/dev/null 2>&1; then
+                echo "chaos"
+            elif [ -f "$HOME/go/bin/chaos" ]; then
+                echo "$HOME/go/bin/chaos"
+            elif [ -f "/root/go/bin/chaos" ]; then
+                echo "/root/go/bin/chaos"
+            else
+                # Search for chaos binary
+                CHAOS_PATH=$(find /root/go /home/*/go $HOME/go -name "chaos" 2>/dev/null | head -1)
+                if [ -n "$CHAOS_PATH" ]; then
+                    echo "$CHAOS_PATH"
+                else
+                    echo ""
+                fi
+            fi
+            ;;
         *)
             if command -v "$tool" >/dev/null 2>&1; then
                 echo "$tool"
@@ -321,7 +358,7 @@ check_tools() {
     # Refresh PATH variables before checking
     refresh_paths
     
-    local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r" "subscraper")
+    local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r" "subscraper" "chaos")
     local available=0
     local total=${#tools[@]}
     
@@ -581,6 +618,25 @@ install_tools() {
         log_success "Assetfinder is already installed - Skipping installation"
     fi
     
+    # Install Chaos
+    log_info "Checking chaos installation..."
+    if ! command -v chaos >/dev/null 2>&1; then
+        log_info "Installing chaos (ProjectDiscovery)..."
+        go install -v github.com/projectdiscovery/chaos-client/cmd/chaos@latest
+        
+        # Ensure PATH is updated
+        echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc && source ~/.bashrc
+        export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+        
+        if command -v chaos >/dev/null 2>&1; then
+            log_success "Chaos installed successfully"
+        else
+            log_error "Chaos installation failed"
+        fi
+    else
+        log_success "Chaos is already installed - Skipping installation"
+    fi
+    
     # 6. Install Findomain
     log_info "Checking findomain installation..."
     if ! command -v findomain >/dev/null 2>&1; then
@@ -756,6 +812,7 @@ show_help() {
     echo "  • subdominator - Advanced subdomain enumeration"
     echo "  • amass        - In-depth DNS enumeration and network mapping"
     echo "  • assetfinder  - Find domains and subdomains"
+    echo "  • chaos        - ProjectDiscovery's subdomain discovery service"
     echo "  • findomain    - Cross-platform subdomain enumerator"
     echo "  • sublist3r    - Python-based subdomain discovery"
     echo "  • subscraper   - DNS brute force + certificate transparency"
@@ -849,7 +906,7 @@ run_enumeration() {
     echo ""
     
     # Tool execution with dynamic path detection
-    local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r" "subscraper")
+    local tools=("subfinder" "subdominator" "amass" "assetfinder" "chaos" "findomain" "sublist3r" "subscraper")
     local completed=0
     
     for i in "${!tools[@]}"; do
@@ -922,6 +979,22 @@ run_enumeration() {
                         if [ -n "$domain" ]; then
                             echo -e "${YELLOW}Processing domain: $domain${NC}"
                             $tool_path --subs-only "$domain" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' >> "$TEMP_DIR/assetfinder.txt" 2>/dev/null || true)
+                        fi
+                    done < "$target"
+                fi
+                ;;
+            "chaos")
+                if [ "$target_type" == "domain" ]; then
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
+                    echo ""
+                    $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/chaos.txt" 2>/dev/null || true)
+                else
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path (multiple domains)${NC}"
+                    echo ""
+                    while read -r domain; do
+                        if [ -n "$domain" ]; then
+                            echo -e "${YELLOW}Processing domain: $domain${NC}"
+                            $tool_path -d "$domain" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' >> "$TEMP_DIR/chaos.txt" 2>/dev/null || true)
                         fi
                     done < "$target"
                 fi
@@ -1003,7 +1076,7 @@ run_enumeration() {
     echo -e "${BRIGHT_GREEN}${BOLD}${BG_GREEN}${WHITE}                            🎯 FINDER RESULTS SUMMARY 🎯                            ${NC}"
     echo -e "${BRIGHT_GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BRIGHT_CYAN}🎯 Target:${NC}                 ${BRIGHT_WHITE}${BOLD}$target${NC}"
-    echo -e "${BRIGHT_BLUE}🛠️  Tools Executed:${NC}         ${BRIGHT_YELLOW}${BOLD}$completed${NC}/${BRIGHT_YELLOW}${BOLD}7${NC}"
+    echo -e "${BRIGHT_BLUE}🛠️  Tools Executed:${NC}         ${BRIGHT_YELLOW}${BOLD}$completed${NC}/${BRIGHT_YELLOW}${BOLD}8${NC}"
     echo -e "${BRIGHT_PURPLE}📊 Total Subdomains Found:${NC} ${BRIGHT_YELLOW}${BOLD}${BLINK}$total_subs${NC} ${BRIGHT_GREEN}🎉${NC}"
     echo -e "${BRIGHT_GREEN}📁 Output File:${NC}            ${BRIGHT_CYAN}${UNDERLINE}$OUTPUT_FILE${NC}"
     echo -e "${BRIGHT_ORANGE}⏰ Execution Time:${NC}        ${WHITE}$(date)${NC}"
