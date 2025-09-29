@@ -1,20 +1,21 @@
 #!/bin/bash
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#                           SUBDOMAINS - Community Edition
-#                      Multi-Tool Subdomain Enumeration Framework
+#                            FINDER - Professional Edition
+#                      Enterprise-Grade Subdomain Enumeration Framework
 # ═══════════════════════════════════════════════════════════════════════════════
 # 
 # Author: MuhammadWaseem29 (@MuhammadWaseem29)
 # Repository: https://github.com/MuhammadWaseem29/subfinder
-# Version: 2.0.0 Community Edition
+# Version: 2.0.0 Professional Edition
 # License: MIT
 #
-# Description: A comprehensive subdomain enumeration tool that integrates 7
-#              powerful subdomain discovery tools with automated installation,
-#              intelligent path detection, and professional reporting.
+# Description: FINDER is a comprehensive enterprise-grade subdomain enumeration
+#              framework that integrates 7 powerful reconnaissance tools with
+#              automated installation, intelligent path detection, and
+#              professional reporting capabilities.
 #
-# Supported Tools:
+# Integrated Tools:
 #   • subfinder    - Fast passive subdomain discovery
 #   • subdominator - Advanced subdomain enumeration 
 #   • amass        - In-depth DNS enumeration and network mapping
@@ -34,10 +35,10 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Script Configuration
-VERSION="2.0.0"
+VERSION="2.0.0 Professional"
 AUTHOR="MuhammadWaseem29"
-OUTPUT_FILE="subdomains_$(date +%Y%m%d_%H%M%S).txt"
-TEMP_DIR="temp_subdomains_$$"
+OUTPUT_FILE="finder_results_$(date +%Y%m%d_%H%M%S).txt"
+TEMP_DIR="temp_finder_$$"
 REPORT_DIR="reports"
 
 # Auto-load Go PATH if not in current session
@@ -76,8 +77,8 @@ NC='\033[0m' # No Color
 show_banner() {
     echo -e "${CYAN}${BOLD}"
     echo "╔═══════════════════════════════════════════════════════════════════════════════╗"
-    echo "║                         SUBDOMAINS - Community Edition                       ║"
-    echo "║                     Multi-Tool Subdomain Enumeration Framework               ║"
+    echo "║                          FINDER - Professional Edition                       ║"
+    echo "║                   Enterprise-Grade Subdomain Enumeration Framework           ║"
     echo "║                                                                               ║"
     echo "║  Version: $VERSION                                    Author: $AUTHOR  ║"
     echo "║  Repository: https://github.com/MuhammadWaseem29/subfinder             ║"
@@ -109,8 +110,8 @@ log_progress() {
 # Debug Function
 debug_paths() {
     show_banner
-    echo -e "${YELLOW}${BOLD}PATH DEBUG INFORMATION${NC}"
-    echo "════════════════════════════════════════════════════════════════════════════════"
+    echo -e "${YELLOW}${BOLD}FINDER - PATH DIAGNOSTIC SYSTEM${NC}"
+    echo "────────────────────────────────────────────────────────────────────────────────"
     echo -e "${BLUE}Current PATH:${NC} $PATH"
     echo ""
     
@@ -316,7 +317,7 @@ cleanup() {
     echo ""
     log_info "Cleaning up temporary files..."
     rm -rf "$TEMP_DIR" 2>/dev/null
-    rm -rf temp_subdomains_* 2>/dev/null
+    rm -rf temp_finder_* 2>/dev/null
     log_success "Cleanup completed"
     exit 1
 }
@@ -327,7 +328,7 @@ trap cleanup INT TERM
 # Installation Function
 install_tools() {
     show_banner
-    log_info "Starting automated tool installation..."
+    log_info "Starting FINDER Professional automated tool installation..."
     
     # Check if running as root
     if [ "$EUID" -ne 0 ]; then
@@ -558,7 +559,7 @@ install_tools() {
     # Final verification
     echo ""
     echo -e "${PURPLE}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${PURPLE}${BOLD}                              INSTALLATION SUMMARY                             ${NC}"
+    echo -e "${PURPLE}${BOLD}                        FINDER INSTALLATION SUMMARY                           ${NC}"
     echo -e "${PURPLE}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
     
     echo ""
@@ -582,14 +583,14 @@ install_tools() {
     echo -e "${BLUE}Final Status:${NC} $installed/$total tools successfully installed"
     
     if [ $installed -eq $total ]; then
-        echo -e "${GREEN}${BOLD}🎯 ALL TOOLS INSTALLED SUCCESSFULLY! 🎯${NC}"
+        echo -e "${GREEN}${BOLD}🎯 FINDER INSTALLATION COMPLETED SUCCESSFULLY! 🎯${NC}"
         echo -e "${CYAN}You can now run: ./subdomains.sh -d example.com${NC}"
     elif [ $installed -gt 0 ]; then
-        echo -e "${YELLOW}${BOLD}⚠️  PARTIAL INSTALLATION COMPLETED ⚠️${NC}"
+        echo -e "${YELLOW}${BOLD}⚠️  FINDER PARTIAL INSTALLATION COMPLETED ⚠️${NC}"
         echo -e "${YELLOW}Some tools may need manual configuration or PATH updates.${NC}"
         echo -e "${CYAN}Available tools can still be used with: ./subdomains.sh -d example.com${NC}"
     else
-        echo -e "${RED}${BOLD}❌ INSTALLATION FAILED ❌${NC}"
+        echo -e "${RED}${BOLD}❌ FINDER INSTALLATION FAILED ❌${NC}"
         echo -e "${RED}Please check the error messages above and try manual installation.${NC}"
     fi
     
@@ -664,8 +665,8 @@ generate_report() {
 </head>
 <body>
     <div class="header">
-        <h1>Subdomain Enumeration Report</h1>
-        <p>Domain: <strong>$domain</strong> | Generated: $(date) | Tool: SUBDOMAINS v$VERSION</p>
+        <h1>FINDER - Subdomain Enumeration Report</h1>
+        <p>Domain: <strong>$domain</strong> | Generated: $(date) | Tool: FINDER v$VERSION</p>
     </div>
     
     <div class="stats">
@@ -690,7 +691,7 @@ EOF
     </div>
     
     <footer style="margin-top: 40px; text-align: center; color: #7f8c8d;">
-        <p>Generated by SUBDOMAINS Community Edition v$VERSION | Author: $AUTHOR</p>
+        <p>Generated by FINDER Professional Edition v$VERSION | Author: $AUTHOR</p>
         <p>Repository: https://github.com/MuhammadWaseem29/subfinder</p>
     </footer>
 </body>
@@ -711,7 +712,7 @@ run_enumeration() {
     refresh_paths
     
     # Create directories
-    rm -rf temp_subdomains_* 2>/dev/null
+    rm -rf temp_finder_* 2>/dev/null
     mkdir -p "$TEMP_DIR" "$REPORT_DIR"
     
     # Check tools before starting
@@ -822,7 +823,7 @@ run_enumeration() {
     
     # Cleanup
     rm -rf "$TEMP_DIR"
-    rm -rf temp_subdomains_* 2>/dev/null
+    rm -rf temp_finder_* 2>/dev/null
     
     # Results
     local total_subs=$(wc -l < "$OUTPUT_FILE" 2>/dev/null || echo "0")
@@ -842,7 +843,7 @@ run_enumeration() {
         generate_report "$target" "$REPORT_NAME" "$total_subs"
     fi
     
-    log_success "Subdomain enumeration completed! 🎯"
+    log_success "FINDER enumeration completed! 🎯"
 }
 
 # Main Script Logic
