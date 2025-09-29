@@ -73,86 +73,123 @@ WHITE='\033[1;37m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+# Enhanced Colors
+BRIGHT_RED='\033[1;31m'
+BRIGHT_GREEN='\033[1;32m'
+BRIGHT_YELLOW='\033[1;33m'
+BRIGHT_BLUE='\033[1;34m'
+BRIGHT_PURPLE='\033[1;35m'
+BRIGHT_CYAN='\033[1;36m'
+ORANGE='\033[0;33m'
+PINK='\033[1;95m'
+LIGHT_BLUE='\033[1;94m'
+LIGHT_GREEN='\033[1;92m'
+LIGHT_RED='\033[1;91m'
+
+# Background Colors
+BG_BLACK='\033[40m'
+BG_RED='\033[41m'
+BG_GREEN='\033[42m'
+BG_YELLOW='\033[43m'
+BG_BLUE='\033[44m'
+BG_PURPLE='\033[45m'
+BG_CYAN='\033[46m'
+BG_WHITE='\033[47m'
+
+# Special Effects
+BLINK='\033[5m'
+UNDERLINE='\033[4m'
+REVERSE='\033[7m'
+DIM='\033[2m'
+
 # Banner Function
 show_banner() {
-    echo -e "${CYAN}${BOLD}"
+    echo -e "${BRIGHT_CYAN}${BOLD}"
     echo "╔═══════════════════════════════════════════════════════════════════════════════╗"
-    echo "║                          FINDER - Professional Edition                       ║"
-    echo "║                   Enterprise-Grade Subdomain Enumeration Framework           ║"
-    echo "║                                                                               ║"
-    echo "║  Version: $VERSION                                    Author: $AUTHOR  ║"
-    echo "║  Repository: https://github.com/MuhammadWaseem29/subfinder             ║"
+    echo -e "║${BRIGHT_PURPLE}                          FINDER - Professional Edition                       ${BRIGHT_CYAN}║"
+    echo -e "║${BRIGHT_BLUE}                   Enterprise-Grade Subdomain Enumeration Framework           ${BRIGHT_CYAN}║"
+    echo -e "║${BRIGHT_GREEN}                                                                               ${BRIGHT_CYAN}║"
+    echo -e "║${BRIGHT_YELLOW}  Version: $VERSION${BRIGHT_CYAN}                                    ${PINK}Author: $AUTHOR${BRIGHT_CYAN}  ║"
+    echo -e "║${ORANGE}  Repository: https://github.com/MuhammadWaseem29/subfinder${BRIGHT_CYAN}             ║"
     echo "╚═══════════════════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
+    
+    # Add colorful decorative line
+    echo -e "${BRIGHT_RED}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_BLUE}▓${BRIGHT_PURPLE}▓${BRIGHT_CYAN}▓${PINK}▓${ORANGE}▓${BRIGHT_RED}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_BLUE}▓${BRIGHT_PURPLE}▓${BRIGHT_CYAN}▓${PINK}▓${ORANGE}▓${BRIGHT_RED}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_BLUE}▓${BRIGHT_PURPLE}▓${BRIGHT_CYAN}▓${PINK}▓${ORANGE}▓${BRIGHT_RED}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_BLUE}▓${BRIGHT_PURPLE}▓${BRIGHT_CYAN}▓${PINK}▓${NC}"
+    echo ""
 }
 
 # Logging Functions
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    echo -e "${BRIGHT_BLUE}${BOLD}[${LIGHT_BLUE}INFO${BRIGHT_BLUE}]${NC} ${CYAN}$1${NC}"
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${BRIGHT_GREEN}${BOLD}[${LIGHT_GREEN}SUCCESS${BRIGHT_GREEN}]${NC} ${GREEN}$1${NC} ${BRIGHT_GREEN}✨${NC}"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${BRIGHT_RED}${BOLD}[${LIGHT_RED}ERROR${BRIGHT_RED}]${NC} ${RED}$1${NC} ${BRIGHT_RED}💥${NC}"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${BRIGHT_YELLOW}${BOLD}[${ORANGE}WARNING${BRIGHT_YELLOW}]${NC} ${YELLOW}$1${NC} ${ORANGE}⚠️${NC}"
 }
 
 log_progress() {
-    echo -e "${PURPLE}[PROGRESS]${NC} $1"
+    echo -e "${BRIGHT_PURPLE}${BOLD}[${PINK}PROGRESS${BRIGHT_PURPLE}]${NC} ${PURPLE}$1${NC} ${BRIGHT_PURPLE}🚀${NC}"
 }
 
 # Debug Function
 debug_paths() {
     show_banner
-    echo -e "${YELLOW}${BOLD}FINDER - PATH DIAGNOSTIC SYSTEM${NC}"
-    echo "────────────────────────────────────────────────────────────────────────────────"
-    echo -e "${BLUE}Current PATH:${NC} $PATH"
+    echo -e "${BRIGHT_YELLOW}${BOLD}${BG_BLUE} FINDER - PATH DIAGNOSTIC SYSTEM ${NC}"
+    echo -e "${BRIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BRIGHT_BLUE}Current PATH:${NC} ${CYAN}$PATH${NC}"
     echo ""
     
-    echo -e "${CYAN}${BOLD}GO BINARY LOCATIONS:${NC}"
-    echo -e "${WHITE}Go command:${NC} $(which go 2>/dev/null || echo -e '${RED}NOT FOUND${NC}')"
-    echo -e "${WHITE}Go version:${NC} $(go version 2>/dev/null || echo -e '${RED}NOT ACCESSIBLE${NC}')"
+    echo -e "${BRIGHT_PURPLE}${BOLD}🔍 GO BINARY LOCATIONS:${NC}"
+    echo -e "${BRIGHT_GREEN}Go command:${NC} $(which go 2>/dev/null && echo -e '${BRIGHT_GREEN}✅${NC}' || echo -e '${BRIGHT_RED}❌ NOT FOUND${NC}')"
+    echo -e "${BRIGHT_GREEN}Go version:${NC} $(go version 2>/dev/null && echo -e '${BRIGHT_GREEN}✅${NC}' || echo -e '${BRIGHT_RED}❌ NOT ACCESSIBLE${NC}')"
     echo ""
     
-    echo -e "${CYAN}${BOLD}SEARCHING FOR BINARIES:${NC}"
-    echo -e "${WHITE}Subfinder locations:${NC}"
-    find /root/go /home/*/go $HOME/go /usr/local -name "subfinder" 2>/dev/null || echo -e "${RED}No subfinder found${NC}"
+    echo -e "${BRIGHT_CYAN}${BOLD}🔎 SEARCHING FOR BINARIES:${NC}"
+    echo -e "${PINK}Subfinder locations:${NC}"
+    find /root/go /home/*/go $HOME/go /usr/local -name "subfinder" 2>/dev/null | sed "s/^/${BRIGHT_GREEN}  ✓ /" || echo -e "${BRIGHT_RED}  ❌ No subfinder found${NC}"
     echo ""
     
-    echo -e "${WHITE}Assetfinder locations:${NC}"
-    find /root/go /home/*/go $HOME/go /usr/local -name "assetfinder" 2>/dev/null || echo -e "${RED}No assetfinder found${NC}"
+    echo -e "${PINK}Assetfinder locations:${NC}"
+    find /root/go /home/*/go $HOME/go /usr/local -name "assetfinder" 2>/dev/null | sed "s/^/${BRIGHT_GREEN}  ✓ /" || echo -e "${BRIGHT_RED}  ❌ No assetfinder found${NC}"
     echo ""
     
-    echo -e "${CYAN}${BOLD}COMMAND DETECTION TEST:${NC}"
+    echo -e "${BRIGHT_PURPLE}${BOLD}🧪 COMMAND DETECTION TEST:${NC}"
     local tools=("subfinder" "subdominator" "amass" "assetfinder" "findomain" "sublist3r")
     for tool in "${tools[@]}"; do
         local cmd_path=$(command -v $tool 2>/dev/null)
         if [ -n "$cmd_path" ]; then
-            echo -e "${GREEN}✓${NC} $tool: $cmd_path"
+            echo -e "${BRIGHT_GREEN}  ✅ ${BOLD}$tool${NC}: ${CYAN}$cmd_path${NC}"
         else
-            echo -e "${RED}✗${NC} $tool: NOT FOUND"
+            echo -e "${BRIGHT_RED}  ❌ ${BOLD}$tool${NC}: ${RED}NOT FOUND${NC}"
         fi
     done
     echo ""
     
-    echo -e "${CYAN}${BOLD}MANUAL PATH LOAD TEST:${NC}"
+    echo -e "${BRIGHT_YELLOW}${BOLD}🔧 MANUAL PATH LOAD TEST:${NC}"
     export PATH="$PATH:/usr/local/go/bin:$HOME/go/bin:/root/go/bin"
-    echo "After PATH update:"
-    echo -e "${WHITE}subfinder:${NC} $(command -v subfinder 2>/dev/null || echo -e '${RED}STILL NOT FOUND${NC}')"
-    echo -e "${WHITE}assetfinder:${NC} $(command -v assetfinder 2>/dev/null || echo -e '${RED}STILL NOT FOUND${NC}')"
+    echo -e "${ORANGE}After PATH update:${NC}"
+    echo -e "${LIGHT_BLUE}subfinder:${NC} $(command -v subfinder 2>/dev/null && echo -e '${BRIGHT_GREEN}✅ FOUND${NC}' || echo -e '${BRIGHT_RED}❌ STILL NOT FOUND${NC}')"
+    echo -e "${LIGHT_BLUE}assetfinder:${NC} $(command -v assetfinder 2>/dev/null && echo -e '${BRIGHT_GREEN}✅ FOUND${NC}' || echo -e '${BRIGHT_RED}❌ STILL NOT FOUND${NC}')"
     echo ""
     
-    echo -e "${CYAN}${BOLD}SUGGESTED FIXES:${NC}"
-    echo "1. Run: source ~/.bashrc"
-    echo "2. Run: export PATH=\$PATH:/usr/local/go/bin:\$HOME/go/bin"
-    echo "3. Restart terminal session"
-    echo "4. Re-run installation: sudo ./subdomains.sh --install"
+    echo -e "${BRIGHT_CYAN}${BOLD}💡 SUGGESTED FIXES:${NC}"
+    echo -e "${BRIGHT_YELLOW}1.${NC} ${CYAN}Run: ${BRIGHT_WHITE}source ~/.bashrc${NC}"
+    echo -e "${BRIGHT_YELLOW}2.${NC} ${CYAN}Run: ${BRIGHT_WHITE}export PATH=\$PATH:/usr/local/go/bin:\$HOME/go/bin${NC}"
+    echo -e "${BRIGHT_YELLOW}3.${NC} ${CYAN}Restart terminal session${NC}"
+    echo -e "${BRIGHT_YELLOW}4.${NC} ${CYAN}Re-run installation: ${BRIGHT_WHITE}sudo ./subdomains.sh --install${NC}"
+    
+    # Add colorful footer
+    echo ""
+    echo -e "${BRIGHT_RED}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_BLUE}▓${BRIGHT_PURPLE}▓${BRIGHT_CYAN}▓${PINK}▓${ORANGE}▓${BRIGHT_RED}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_BLUE}▓${BRIGHT_PURPLE}▓${BRIGHT_CYAN}▓${PINK}▓${ORANGE}▓${BRIGHT_RED}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_BLUE}▓${BRIGHT_PURPLE}▓${BRIGHT_CYAN}▓${PINK}▓${ORANGE}▓${BRIGHT_RED}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_BLUE}▓${BRIGHT_PURPLE}▓${BRIGHT_CYAN}▓${PINK}▓${NC}"
 }
 
 # PATH Refresh Function
@@ -284,24 +321,25 @@ check_tools() {
     local available=0
     local total=${#tools[@]}
     
-    echo -e "${CYAN}${BOLD}Tool Availability Check:${NC}"
-    echo "────────────────────────────────────────────────────────────────"
+    echo -e "${BRIGHT_CYAN}${BOLD}${BG_BLUE} 🔍 FINDER TOOL AVAILABILITY CHECK 🔍 ${NC}"
+    echo -e "${BRIGHT_PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
     for tool in "${tools[@]}"; do
         local tool_path=$(detect_tool_path "$tool")
         if [ -n "$tool_path" ]; then
-            echo -e "${GREEN}✓${NC} $tool - ${GREEN}Available${NC} ($tool_path)"
+            echo -e "${BRIGHT_GREEN}✅ ${BOLD}$tool${NC} - ${LIGHT_GREEN}Available${NC} ${CYAN}($tool_path)${NC} ${BRIGHT_GREEN}🎯${NC}"
             ((available++))
         else
-            echo -e "${RED}✗${NC} $tool - ${RED}Not Found${NC}"
+            echo -e "${BRIGHT_RED}❌ ${BOLD}$tool${NC} - ${LIGHT_RED}Not Found${NC} ${BRIGHT_RED}💥${NC}"
         fi
     done
     
-    echo "────────────────────────────────────────────────────────────────"
-    echo -e "${BLUE}Status:${NC} $available/$total tools available"
+    echo -e "${BRIGHT_PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BRIGHT_BLUE}📊 Status:${NC} ${BRIGHT_YELLOW}$available${NC}/${BRIGHT_YELLOW}$total${NC} tools available"
     
     if [ $available -eq $total ]; then
-        log_success "All tools are ready! 🎯"
+        log_success "All tools are ready! 🎯🚀"
+        echo -e "${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${BRIGHT_GREEN}▓${BRIGHT_YELLOW}▓${NC}"
         return 0
     elif [ $available -gt 0 ]; then
         log_warning "Some tools are missing. Run './subdomains.sh --install' to install missing tools."
@@ -583,15 +621,16 @@ install_tools() {
     echo -e "${BLUE}Final Status:${NC} $installed/$total tools successfully installed"
     
     if [ $installed -eq $total ]; then
-        echo -e "${GREEN}${BOLD}🎯 FINDER INSTALLATION COMPLETED SUCCESSFULLY! 🎯${NC}"
-        echo -e "${CYAN}You can now run: ./subdomains.sh -d example.com${NC}"
+        echo -e "${BRIGHT_GREEN}${BOLD}${BLINK}🎯 FINDER INSTALLATION COMPLETED SUCCESSFULLY! 🎯${NC}"
+        echo -e "${BRIGHT_CYAN}✨ You can now run: ${BRIGHT_WHITE}./subdomains.sh -d example.com${NC} ✨"
+        echo -e "${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_YELLOW}🎉${NC}"
     elif [ $installed -gt 0 ]; then
-        echo -e "${YELLOW}${BOLD}⚠️  FINDER PARTIAL INSTALLATION COMPLETED ⚠️${NC}"
-        echo -e "${YELLOW}Some tools may need manual configuration or PATH updates.${NC}"
-        echo -e "${CYAN}Available tools can still be used with: ./subdomains.sh -d example.com${NC}"
+        echo -e "${BRIGHT_YELLOW}${BOLD}⚠️  FINDER PARTIAL INSTALLATION COMPLETED ⚠️${NC}"
+        echo -e "${ORANGE}Some tools may need manual configuration or PATH updates.${NC}"
+        echo -e "${BRIGHT_CYAN}Available tools can still be used with: ${BRIGHT_WHITE}./subdomains.sh -d example.com${NC}"
     else
-        echo -e "${RED}${BOLD}❌ FINDER INSTALLATION FAILED ❌${NC}"
-        echo -e "${RED}Please check the error messages above and try manual installation.${NC}"
+        echo -e "${BRIGHT_RED}${BOLD}${BLINK}❌ FINDER INSTALLATION FAILED ❌${NC}"
+        echo -e "${LIGHT_RED}Please check the error messages above and try manual installation.${NC}"
     fi
     
     echo ""
@@ -741,8 +780,8 @@ run_enumeration() {
             continue
         fi
         
-        echo -e "${BLUE}[$tool_num/7]${NC} ${YELLOW}Running${NC} ${GREEN}$tool${NC} for $target_type: ${CYAN}$target${NC}..."
-        echo "════════════════════════════════════════════════════════════════════════════════"
+        echo -e "${BRIGHT_BLUE}[${BRIGHT_YELLOW}$tool_num${BRIGHT_BLUE}/${BRIGHT_YELLOW}7${BRIGHT_BLUE}]${NC} ${BRIGHT_PURPLE}Running${NC} ${BRIGHT_GREEN}${BOLD}$tool${NC} for $target_type: ${BRIGHT_CYAN}${BOLD}$target${NC}..."
+        echo -e "${BRIGHT_PURPLE}════════════════════════════════════════════════════════════════════════════════${NC}"
         
         case "$tool" in
             "subfinder")
@@ -810,15 +849,16 @@ run_enumeration() {
                 ;;
         esac
         
-        echo "════════════════════════════════════════════════════════════════════════════════"
-        log_success "Completed $tool"
+        echo -e "${BRIGHT_PURPLE}╚════════════════════════════════════════════════════════════════════════════════╝${NC}"
+        echo -e "${BRIGHT_GREEN}${BOLD}✅ Completed${NC} ${BRIGHT_GREEN}$tool${NC} ${BRIGHT_GREEN}🎯${NC}"
         echo ""
         ((completed++))
     done
     
     # Merge results
     echo ""
-    log_progress "Merging results and removing duplicates..."
+    echo -e "${BRIGHT_PURPLE}${BOLD}🔄 Merging results and removing duplicates...${NC} ${BRIGHT_CYAN}✨${NC}"
+    echo -e "${BRIGHT_BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | sort -u > "$OUTPUT_FILE"
     
     # Cleanup
@@ -828,22 +868,25 @@ run_enumeration() {
     # Results
     local total_subs=$(wc -l < "$OUTPUT_FILE" 2>/dev/null || echo "0")
     echo ""
-    echo -e "${GREEN}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}${BOLD}                              RESULTS SUMMARY                                ${NC}"
-    echo -e "${GREEN}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${WHITE}Target:${NC}                 $target"
-    echo -e "${WHITE}Tools Executed:${NC}         $completed/7"
-    echo -e "${WHITE}Total Subdomains Found:${NC} ${YELLOW}${BOLD}$total_subs${NC}"
-    echo -e "${WHITE}Output File:${NC}            ${CYAN}$OUTPUT_FILE${NC}"
-    echo -e "${WHITE}Execution Time:${NC}        $(date)"
-    echo -e "${GREEN}${BOLD}═══════════════════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BRIGHT_GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BRIGHT_GREEN}${BOLD}${BG_GREEN}${WHITE}                            🎯 FINDER RESULTS SUMMARY 🎯                            ${NC}"
+    echo -e "${BRIGHT_GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BRIGHT_CYAN}🎯 Target:${NC}                 ${BRIGHT_WHITE}${BOLD}$target${NC}"
+    echo -e "${BRIGHT_BLUE}🛠️  Tools Executed:${NC}         ${BRIGHT_YELLOW}${BOLD}$completed${NC}/${BRIGHT_YELLOW}${BOLD}7${NC}"
+    echo -e "${BRIGHT_PURPLE}📊 Total Subdomains Found:${NC} ${BRIGHT_YELLOW}${BOLD}${BLINK}$total_subs${NC} ${BRIGHT_GREEN}🎉${NC}"
+    echo -e "${BRIGHT_GREEN}📁 Output File:${NC}            ${BRIGHT_CYAN}${UNDERLINE}$OUTPUT_FILE${NC}"
+    echo -e "${BRIGHT_ORANGE}⏰ Execution Time:${NC}        ${WHITE}$(date)${NC}"
+    echo -e "${BRIGHT_GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
     # Generate report if requested
     if [ -n "$REPORT_NAME" ]; then
         generate_report "$target" "$REPORT_NAME" "$total_subs"
     fi
     
-    log_success "FINDER enumeration completed! 🎯"
+    log_success "FINDER enumeration completed! 🎯🚀✨"
+    
+    # Add celebration footer
+    echo -e "${BRIGHT_RED}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_BLUE}🎉${BRIGHT_PURPLE}🎉${BRIGHT_CYAN}🎉${PINK}🎉${ORANGE}🎉${BRIGHT_RED}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_BLUE}🎉${BRIGHT_PURPLE}🎉${BRIGHT_CYAN}🎉${PINK}🎉${ORANGE}🎉${BRIGHT_RED}🎉${BRIGHT_YELLOW}🎉${BRIGHT_GREEN}🎉${BRIGHT_BLUE}🎉${BRIGHT_PURPLE}🎉${BRIGHT_CYAN}🎉${PINK}🎉${NC}"
 }
 
 # Main Script Logic
