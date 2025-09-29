@@ -1,6 +1,0 @@
-# Sample domain list for testing
-# Lines starting with # are comments and will be ignored
-
-google.com
-github.com
-stackoverflow.com

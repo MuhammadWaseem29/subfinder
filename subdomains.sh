@@ -421,6 +421,23 @@ install_tools() {
         log_success "Go is already installed: $(go version)"
     fi
     
+    # Install ProjectDiscovery Tool Manager (pdtm)
+    log_info "Installing ProjectDiscovery Tool Manager (pdtm)..."
+    go install -v github.com/projectdiscovery/pdtm/cmd/pdtm@latest
+    
+    if command -v pdtm >/dev/null 2>&1; then
+        log_success "pdtm installed successfully"
+        log_info "Installing all ProjectDiscovery tools with pdtm..."
+        pdtm -ia
+        log_success "ProjectDiscovery tools installation completed"
+    else
+        log_warning "pdtm installation failed, continuing with manual tool installation"
+    fi
+    
+    # Install network tools
+    log_info "Installing network tools..."
+    apt install -y net-tools
+    
     # 2. Install Subfinder
     log_info "Installing subfinder..."
     go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
