@@ -786,12 +786,16 @@ run_enumeration() {
         case "$tool" in
             "subfinder")
                 if [ "$target_type" == "domain" ]; then
-                    timeout 300 $tool_path -d "$target" 2>/dev/null | tee "$TEMP_DIR/subfinder.txt" || {
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
+                    echo ""
+                    timeout 300 $tool_path -d "$target" 2>&1 | tee "$TEMP_DIR/subfinder.txt" || {
                         log_warning "Subfinder timed out or failed for $target"
                         touch "$TEMP_DIR/subfinder.txt"
                     }
                 else
-                    timeout 600 $tool_path -dL "$target" 2>/dev/null | tee "$TEMP_DIR/subfinder.txt" || {
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target${NC}"
+                    echo ""
+                    timeout 600 $tool_path -dL "$target" 2>&1 | tee "$TEMP_DIR/subfinder.txt" || {
                         log_warning "Subfinder timed out or failed for domain list"
                         touch "$TEMP_DIR/subfinder.txt"
                     }
@@ -799,56 +803,96 @@ run_enumeration() {
                 ;;
             "subdominator")
                 if [ "$target_type" == "domain" ]; then
-                    $tool_path -d "$target" | tee "$TEMP_DIR/subdominator.txt"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
+                    echo ""
+                    $tool_path -d "$target" 2>&1 | tee "$TEMP_DIR/subdominator.txt"
                 else
-                    $tool_path -dL "$target" | tee "$TEMP_DIR/subdominator.txt"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -dL $target${NC}"
+                    echo ""
+                    $tool_path -dL "$target" 2>&1 | tee "$TEMP_DIR/subdominator.txt"
                 fi
                 ;;
             "amass")
                 if [ "$target_type" == "domain" ]; then
-                    $tool_path enum -passive -d "$target" | tee "$TEMP_DIR/amass.txt"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path enum -passive -d $target${NC}"
+                    echo ""
+                    $tool_path enum -passive -d "$target" 2>&1 | tee "$TEMP_DIR/amass.txt"
                 else
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path enum -passive (multiple domains)${NC}"
+                    echo ""
                     while read -r domain; do
-                        [ -n "$domain" ] && $tool_path enum -passive -d "$domain" | tee -a "$TEMP_DIR/amass.txt"
+                        if [ -n "$domain" ]; then
+                            echo -e "${YELLOW}Processing domain: $domain${NC}"
+                            $tool_path enum -passive -d "$domain" 2>&1 | tee -a "$TEMP_DIR/amass.txt"
+                        fi
                     done < "$target"
                 fi
                 ;;
             "assetfinder")
                 if [ "$target_type" == "domain" ]; then
-                    $tool_path --subs-only "$target" | tee "$TEMP_DIR/assetfinder.txt"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path --subs-only $target${NC}"
+                    echo ""
+                    $tool_path --subs-only "$target" 2>&1 | tee "$TEMP_DIR/assetfinder.txt"
                 else
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path --subs-only (multiple domains)${NC}"
+                    echo ""
                     while read -r domain; do
-                        [ -n "$domain" ] && $tool_path --subs-only "$domain" | tee -a "$TEMP_DIR/assetfinder.txt"
+                        if [ -n "$domain" ]; then
+                            echo -e "${YELLOW}Processing domain: $domain${NC}"
+                            $tool_path --subs-only "$domain" 2>&1 | tee -a "$TEMP_DIR/assetfinder.txt"
+                        fi
                     done < "$target"
                 fi
                 ;;
             "findomain")
                 if [ "$target_type" == "domain" ]; then
-                    $tool_path -t "$target" | tee "$TEMP_DIR/findomain.txt"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -t $target${NC}"
+                    echo ""
+                    $tool_path -t "$target" 2>&1 | tee "$TEMP_DIR/findomain.txt"
                 else
-                    $tool_path -f "$target" | tee "$TEMP_DIR/findomain.txt"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -f $target${NC}"
+                    echo ""
+                    $tool_path -f "$target" 2>&1 | tee "$TEMP_DIR/findomain.txt"
                 fi
                 ;;
             "sublist3r")
                 if [ "$target_type" == "domain" ]; then
-                    $tool_path -d "$target" | tee "$TEMP_DIR/sublist3r.txt"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
+                    echo ""
+                    $tool_path -d "$target" 2>&1 | tee "$TEMP_DIR/sublist3r.txt"
                 else
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path (multiple domains)${NC}"
+                    echo ""
                     while read -r domain; do
-                        [ -n "$domain" ] && $tool_path -d "$domain" | tee -a "$TEMP_DIR/sublist3r.txt"
+                        if [ -n "$domain" ]; then
+                            echo -e "${YELLOW}Processing domain: $domain${NC}"
+                            $tool_path -d "$domain" 2>&1 | tee -a "$TEMP_DIR/sublist3r.txt"
+                        fi
                     done < "$target"
                 fi
                 ;;
             "subscraper")
                 if [ "$target_type" == "domain" ]; then
-                    $tool_path -d "$target" | tee "$TEMP_DIR/subscraper.txt"
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
+                    echo ""
+                    $tool_path -d "$target" 2>&1 | tee "$TEMP_DIR/subscraper.txt"
                 else
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path (multiple domains)${NC}"
+                    echo ""
                     while read -r domain; do
-                        [ -n "$domain" ] && $tool_path -d "$domain" | tee -a "$TEMP_DIR/subscraper.txt"
+                        if [ -n "$domain" ]; then
+                            echo -e "${YELLOW}Processing domain: $domain${NC}"
+                            $tool_path -d "$domain" 2>&1 | tee -a "$TEMP_DIR/subscraper.txt"
+                        fi
                     done < "$target"
                 fi
                 ;;
         esac
         
+        echo ""
+        echo -e "${BRIGHT_GREEN}[✓] Tool $tool completed successfully${NC}"
+        echo -e "${LIGHT_BLUE}════════════════════════════════════════════════════════════════════════════════${NC}"
+        echo ""
         echo -e "${BRIGHT_PURPLE}╚════════════════════════════════════════════════════════════════════════════════╝${NC}"
         echo -e "${BRIGHT_GREEN}${BOLD}✅ Completed${NC} ${BRIGHT_GREEN}$tool${NC} ${BRIGHT_GREEN}🎯${NC}"
         echo ""
