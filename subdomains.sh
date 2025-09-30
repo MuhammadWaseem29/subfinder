@@ -41,6 +41,14 @@ AUTHOR="MuhammadWaseem29"
 OUTPUT_FILE="finder_results_$(date +%Y%m%d_%H%M%S).txt"
 TEMP_DIR="temp_finder_$$"
 
+# ProjectDiscovery API Key (hardcoded for automatic Chaos functionality)
+DEFAULT_PDCP_API_KEY="45c4a78e-957e-486f-80b9-f506362d9ae4"
+
+# Set PDCP_API_KEY if not already configured
+if [ -z "$PDCP_API_KEY" ]; then
+    export PDCP_API_KEY="$DEFAULT_PDCP_API_KEY"
+fi
+
 # Auto-load Go PATH if not in current session
 if ! command -v go >/dev/null 2>&1; then
     # Try to load Go from common locations
@@ -368,17 +376,8 @@ check_tools() {
     for tool in "${tools[@]}"; do
         local tool_path=$(detect_tool_path "$tool")
         if [ -n "$tool_path" ]; then
-            if [ "$tool" == "chaos" ]; then
-                if [ -z "$PDCP_API_KEY" ]; then
-                    echo -e "${BRIGHT_YELLOW}⚠️  ${BOLD}$tool${NC} - ${LIGHT_YELLOW}Available (API key needed)${NC} ${CYAN}($tool_path)${NC} ${BRIGHT_YELLOW}🔑${NC}"
-                else
-                    echo -e "${BRIGHT_GREEN}✅ ${BOLD}$tool${NC} - ${LIGHT_GREEN}Available${NC} ${CYAN}($tool_path)${NC} ${BRIGHT_GREEN}🎯${NC}"
-                    ((available++))
-                fi
-            else
-                echo -e "${BRIGHT_GREEN}✅ ${BOLD}$tool${NC} - ${LIGHT_GREEN}Available${NC} ${CYAN}($tool_path)${NC} ${BRIGHT_GREEN}🎯${NC}"
-                ((available++))
-            fi
+            echo -e "${BRIGHT_GREEN}✅ ${BOLD}$tool${NC} - ${LIGHT_GREEN}Available${NC} ${CYAN}($tool_path)${NC} ${BRIGHT_GREEN}🎯${NC}"
+            ((available++))
         else
             echo -e "${BRIGHT_RED}❌ ${BOLD}$tool${NC} - ${LIGHT_RED}Not Found${NC} ${BRIGHT_RED}💥${NC}"
         fi
@@ -639,31 +638,13 @@ install_tools() {
         
         if command -v chaos >/dev/null 2>&1; then
             log_success "Chaos installed successfully"
-            
-            # Check for API key configuration
-            if [ -z "$PDCP_API_KEY" ]; then
-                log_warning "Chaos requires PDCP_API_KEY for operation"
-                log_info "To configure Chaos API key:"
-                echo -e "${BRIGHT_YELLOW}1.${NC} Get your API key from: ${BRIGHT_CYAN}https://chaos.projectdiscovery.io${NC}"
-                echo -e "${BRIGHT_YELLOW}2.${NC} Run: ${BRIGHT_WHITE}export PDCP_API_KEY=your_api_key_here${NC}"
-                echo -e "${BRIGHT_YELLOW}3.${NC} Add to bashrc: ${BRIGHT_WHITE}echo 'export PDCP_API_KEY=your_key' >> ~/.bashrc${NC}"
-                log_info "Chaos will be skipped during enumeration until API key is configured"
-            else
-                log_success "Chaos API key is configured"
-            fi
+            log_success "Chaos API key is pre-configured (hardcoded)"
         else
             log_error "Chaos installation failed"
         fi
     else
         log_success "Chaos is already installed - Skipping installation"
-        
-        # Check API key for existing installation
-        if [ -z "$PDCP_API_KEY" ]; then
-            log_warning "Chaos API key not configured - tool will be skipped during enumeration"
-            log_info "Configure with: export PDCP_API_KEY=your_api_key"
-        else
-            log_success "Chaos API key is configured"
-        fi
+        log_success "Chaos API key is pre-configured (hardcoded)"
     fi
     
     # 6. Install Findomain
@@ -1048,26 +1029,19 @@ run_enumeration() {
                 fi
                 ;;
             "chaos")
-                if [ -z "$PDCP_API_KEY" ]; then
-                    log_warning "Chaos skipped - PDCP_API_KEY not configured"
-                    log_info "Get API key from: https://chaos.projectdiscovery.io"
-                    log_info "Configure with: export PDCP_API_KEY=your_api_key"
-                    touch "$TEMP_DIR/chaos.txt"  # Create empty file to avoid errors
+                if [ "$target_type" == "domain" ]; then
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
+                    echo ""
+                    $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/chaos.txt" 2>/dev/null || true)
                 else
-                    if [ "$target_type" == "domain" ]; then
-                        echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path -d $target${NC}"
-                        echo ""
-                        $tool_path -d "$target" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' > "$TEMP_DIR/chaos.txt" 2>/dev/null || true)
-                    else
-                        echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path (multiple domains)${NC}"
-                        echo ""
-                        while read -r domain; do
-                            if [ -n "$domain" ]; then
-                                echo -e "${YELLOW}Processing domain: $domain${NC}"
-                                $tool_path -d "$domain" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' >> "$TEMP_DIR/chaos.txt" 2>/dev/null || true)
-                            fi
-                        done < "$target"
-                    fi
+                    echo -e "${BRIGHT_CYAN}🔍 Executing: ${BRIGHT_WHITE}$tool_path (multiple domains)${NC}"
+                    echo ""
+                    while read -r domain; do
+                        if [ -n "$domain" ]; then
+                            echo -e "${YELLOW}Processing domain: $domain${NC}"
+                            $tool_path -d "$domain" 2>&1 | tee >(grep -E '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' >> "$TEMP_DIR/chaos.txt" 2>/dev/null || true)
+                        fi
+                    done < "$target"
                 fi
                 ;;
             "findomain")
