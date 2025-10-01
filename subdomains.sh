@@ -41,14 +41,6 @@ AUTHOR="MuhammadWaseem29"
 OUTPUT_FILE="finder_results_$(date +%Y%m%d_%H%M%S).txt"
 TEMP_DIR="temp_finder_$$"
 
-# ProjectDiscovery API Key (hardcoded for automatic Chaos functionality)
-DEFAULT_PDCP_API_KEY="45c4a78e-957e-486f-80b9-f506362d9ae4"
-
-# Set PDCP_API_KEY if not already configured
-if [ -z "$PDCP_API_KEY" ]; then
-    export PDCP_API_KEY="$DEFAULT_PDCP_API_KEY"
-fi
-
 # Auto-load Go PATH if not in current session
 if ! command -v go >/dev/null 2>&1; then
     # Try to load Go from common locations
@@ -69,6 +61,9 @@ fi
 if [ -d "/root/go/bin" ]; then
     export PATH="$PATH:/root/go/bin"
 fi
+
+# Set ProjectDiscovery API Key
+export PDCP_API_KEY="45c4a78e-957e-486f-80b9-f506362d9ae4"
 
 # Color Definitions
 RED='\033[0;31m'
@@ -638,13 +633,13 @@ install_tools() {
         
         if command -v chaos >/dev/null 2>&1; then
             log_success "Chaos installed successfully"
-            log_success "Chaos API key is pre-configured (hardcoded)"
+            log_success "Chaos API key is pre-configured in FINDER"
         else
             log_error "Chaos installation failed"
         fi
     else
         log_success "Chaos is already installed - Skipping installation"
-        log_success "Chaos API key is pre-configured (hardcoded)"
+        log_success "Chaos API key is pre-configured in FINDER"
     fi
     
     # 6. Install Findomain
