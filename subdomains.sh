@@ -946,10 +946,14 @@ run_enumeration() {
     fi
     
     log_info "Starting subdomain enumeration for: $target"
+    
+    # Ensure OUTPUT_FILE is only set if -o flag was used
     if [ -n "$OUTPUT_FILE" ]; then
         log_info "Output will be saved to: $OUTPUT_FILE"
     else
         log_info "Results will be displayed on screen only (use -o flag to save to file)"
+        # Ensure OUTPUT_FILE is empty to prevent any accidental file creation
+        OUTPUT_FILE=""
     fi
     echo ""
     
@@ -1163,10 +1167,11 @@ run_enumeration() {
 
 # Main Script Logic
 main() {
-    # Default values
+    # Default values - ensure OUTPUT_FILE is empty unless -o flag is used
     DOMAIN=""
     DOMAIN_FILE=""
     REPORT_NAME=""
+    OUTPUT_FILE=""  # Explicitly set to empty
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
