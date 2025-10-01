@@ -38,7 +38,7 @@
 # Script Configuration
 VERSION="2.0.0 Professional"
 AUTHOR="MuhammadWaseem29"
-OUTPUT_FILE="finder_results_$(date +%Y%m%d_%H%M%S).txt"
+OUTPUT_FILE=""  # Will be set only if user specifies -o flag
 TEMP_DIR="temp_finder_$$"
 
 # Auto-load Go PATH if not in current session
@@ -795,7 +795,7 @@ show_help() {
     echo -e "${YELLOW}${BOLD}OPTIONS:${NC}"
     echo "  -d  <domain>              Target domain to enumerate"
     echo "  -dL <file>               File containing list of domains (one per line)"
-    echo "  -o  <output_file>        Custom output file (default: subdomains_TIMESTAMP.txt)"
+    echo "  -o  <output_file>        Custom output file (default: display on screen only)"
     echo "  -r  <report_name>        Generate detailed report"
     echo "  --install                Install all required tools"
     echo "  --check                  Check tool availability"
@@ -900,9 +900,13 @@ generate_report() {
 EOF
 
     # Add subdomains to report
-    while read -r subdomain; do
-        echo "            <span class=\"subdomain\">$subdomain</span>" >> "$report_file"
-    done < "$OUTPUT_FILE"
+    if [ -n "$OUTPUT_FILE" ] && [ -f "$OUTPUT_FILE" ]; then
+        while read -r subdomain; do
+            echo "            <span class=\"subdomain\">$subdomain</span>" >> "$report_file"
+        done < "$OUTPUT_FILE"
+    else
+        echo "            <span class=\"subdomain\">No output file available</span>" >> "$report_file"
+    fi
     
     cat >> "$report_file" << EOF
         </div>
@@ -942,7 +946,11 @@ run_enumeration() {
     fi
     
     log_info "Starting subdomain enumeration for: $target"
-    log_info "Output will be saved to: $OUTPUT_FILE"
+    if [ -n "$OUTPUT_FILE" ]; then
+        log_info "Output will be saved to: $OUTPUT_FILE"
+    else
+        log_info "Results will be displayed on screen only (use -o flag to save to file)"
+    fi
     echo ""
     
     # Tool execution with dynamic path detection
@@ -1098,7 +1106,27 @@ run_enumeration() {
     echo ""
     echo -e "${BRIGHT_PURPLE}${BOLD}🔄 Merging results and removing duplicates...${NC} ${BRIGHT_CYAN}✨${NC}"
     echo -e "${BRIGHT_BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | sort -u > "$OUTPUT_FILE"
+    
+    # Create merged results in temp file first
+    local temp_results="$TEMP_DIR/merged_results.txt"
+    cat "$TEMP_DIR"/*.txt 2>/dev/null | grep -v '^$' | sort -u > "$temp_results"
+    
+    # Display results on screen
+    local total_subs=$(wc -l < "$temp_results" 2>/dev/null || echo "0")
+    echo -e "${BRIGHT_GREEN}${BOLD}📋 DISCOVERED SUBDOMAINS:${NC}"
+    echo -e "${BRIGHT_CYAN}════════════════════════════════════════════════════════════════${NC}"
+    if [ "$total_subs" -gt 0 ]; then
+        cat "$temp_results"
+    else
+        echo -e "${BRIGHT_YELLOW}No subdomains found${NC}"
+    fi
+    echo -e "${BRIGHT_CYAN}════════════════════════════════════════════════════════════════${NC}"
+    
+    # Save to file only if -o flag was used
+    if [ -n "$OUTPUT_FILE" ]; then
+        cp "$temp_results" "$OUTPUT_FILE"
+        log_success "Results saved to: $OUTPUT_FILE"
+    fi
     
     # Clean up all temporary files and any tool-generated files
     rm -rf "$TEMP_DIR"
@@ -1110,7 +1138,6 @@ run_enumeration() {
     rm -rf reports 2>/dev/null
     
     # Results
-    local total_subs=$(wc -l < "$OUTPUT_FILE" 2>/dev/null || echo "0")
     echo ""
     echo -e "${BRIGHT_GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BRIGHT_GREEN}${BOLD}${BG_GREEN}${WHITE}                            🎯 FINDER RESULTS SUMMARY 🎯                            ${NC}"
@@ -1118,7 +1145,13 @@ run_enumeration() {
     echo -e "${BRIGHT_CYAN}🎯 Target:${NC}                 ${BRIGHT_WHITE}${BOLD}$target${NC}"
     echo -e "${BRIGHT_BLUE}🛠️  Tools Executed:${NC}         ${BRIGHT_YELLOW}${BOLD}$completed${NC}/${BRIGHT_YELLOW}${BOLD}8${NC}"
     echo -e "${BRIGHT_PURPLE}📊 Total Subdomains Found:${NC} ${BRIGHT_YELLOW}${BOLD}${BLINK}$total_subs${NC} ${BRIGHT_GREEN}🎉${NC}"
-    echo -e "${BRIGHT_GREEN}📁 Output File:${NC}            ${BRIGHT_CYAN}${UNDERLINE}$OUTPUT_FILE${NC}"
+    
+    if [ -n "$OUTPUT_FILE" ]; then
+        echo -e "${BRIGHT_GREEN}📁 Output File:${NC}            ${BRIGHT_CYAN}${UNDERLINE}$OUTPUT_FILE${NC}"
+    else
+        echo -e "${BRIGHT_GREEN}📋 Output:${NC}                ${BRIGHT_YELLOW}Displayed above (use -o to save to file)${NC}"
+    fi
+    
     echo -e "${BRIGHT_ORANGE}⏰ Execution Time:${NC}        ${WHITE}$(date)${NC}"
     echo -e "${BRIGHT_GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
